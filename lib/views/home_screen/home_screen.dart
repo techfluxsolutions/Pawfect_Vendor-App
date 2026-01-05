@@ -121,52 +121,52 @@ class HomeScreen extends StatelessWidget {
               Row(
                 children: [
                   // Store Status Toggle
-                  Obx(
-                    () => Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color:
-                            controller.isStoreActive.value
-                                ? Colors.green[100]
-                                : Colors.red[100],
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color:
-                                  controller.isStoreActive.value
-                                      ? Colors.green
-                                      : Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          SizedBox(width: 6),
-                          Text(
-                            controller.isStoreActive.value
-                                ? 'Active'
-                                : 'Inactive',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color:
-                                  controller.isStoreActive.value
-                                      ? Colors.green[800]
-                                      : Colors.red[800],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 12),
+                  // Obx(
+                  //   () => Container(
+                  //     padding: EdgeInsets.symmetric(
+                  //       horizontal: 12,
+                  //       vertical: 6,
+                  //     ),
+                  //     decoration: BoxDecoration(
+                  //       color:
+                  //           controller.isStoreActive.value
+                  //               ? Colors.green[100]
+                  //               : Colors.red[100],
+                  //       borderRadius: BorderRadius.circular(20),
+                  //     ),
+                  //     child: Row(
+                  //       mainAxisSize: MainAxisSize.min,
+                  //       children: [
+                  //         Container(
+                  //           width: 8,
+                  //           height: 8,
+                  //           decoration: BoxDecoration(
+                  //             color:
+                  //                 controller.isStoreActive.value
+                  //                     ? Colors.green
+                  //                     : Colors.red,
+                  //             shape: BoxShape.circle,
+                  //           ),
+                  //         ),
+                  //         SizedBox(width: 6),
+                  //         Text(
+                  //           controller.isStoreActive.value
+                  //               ? 'Active'
+                  //               : 'Inactive',
+                  //           style: TextStyle(
+                  //             fontSize: 12,
+                  //             fontWeight: FontWeight.w600,
+                  //             color:
+                  //                 controller.isStoreActive.value
+                  //                     ? Colors.green[800]
+                  //                     : Colors.red[800],
+                  //           ),
+                  //         ),
+                  //       ],
+                  //     ),
+                  //   ),
+                  // ),
+                  // SizedBox(width: 12),
                   // Notification Bell
                   Stack(
                     children: [

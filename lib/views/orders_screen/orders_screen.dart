@@ -114,6 +114,7 @@ class OrdersScreen extends StatelessWidget {
 
         // Active Filters
         Obx(() => _buildActiveFilters(primaryColor)),
+        SizedBox(height: 16),
 
         // Orders List
         Expanded(
@@ -560,21 +561,34 @@ class OrdersScreen extends StatelessWidget {
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
             SizedBox(height: 16),
-            ...controller.statusOptions
-                .where((status) => status['value'] != 'all')
-                .map(
-                  (status) => ListTile(
-                    leading: Icon(
-                      controller.getStatusIcon(status['value']!),
-                      color: controller.getStatusColor(status['value']!),
-                    ),
-                    title: Text(status['label']!),
-                    onTap: () {
-                      Get.back();
-                      controller.updateOrderStatus(order, status['value']!);
-                    },
-                  ),
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  children:
+                      controller.statusOptions
+                          .where((status) => status['value'] != 'all')
+                          .map(
+                            (status) => ListTile(
+                              leading: Icon(
+                                controller.getStatusIcon(status['value']!),
+                                color: controller.getStatusColor(
+                                  status['value']!,
+                                ),
+                              ),
+                              title: Text(status['label']!),
+                              onTap: () {
+                                Get.back();
+                                controller.updateOrderStatus(
+                                  order,
+                                  status['value']!,
+                                );
+                              },
+                            ),
+                          )
+                          .toList(),
                 ),
+              ),
+            ),
             SizedBox(height: 10),
             TextButton(
               onPressed: () => Get.back(),

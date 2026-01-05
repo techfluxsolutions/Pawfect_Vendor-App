@@ -133,16 +133,16 @@ class AnalyticsScreen extends StatelessWidget {
           SizedBox(height: 20),
 
           // Sales Chart
-          _buildSalesChart(primaryColor),
-          SizedBox(height: 20),
+          // _buildSalesChart(primaryColor),
+          // SizedBox(height: 20),
 
           // Orders Chart
-          _buildOrdersChart(primaryColor),
-          SizedBox(height: 20),
+          // _buildOrdersChart(primaryColor),
+          // SizedBox(height: 20),
 
           // Category Distribution
-          _buildCategoryChart(primaryColor),
-          SizedBox(height: 20),
+          // _buildCategoryChart(primaryColor),
+          // SizedBox(height: 20),
 
           // Customer Analytics
           _buildCustomerAnalytics(primaryColor),

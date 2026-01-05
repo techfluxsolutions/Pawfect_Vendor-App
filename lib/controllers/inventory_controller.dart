@@ -514,10 +514,32 @@ class InventoryController extends GetxController {
   // ========== Navigation ==========
 
   void navigateToProductDetails(InventoryItem item) {
-    Get.toNamed(
-      AppRoutes.productDetails,
-      arguments: {'productId': item.productId},
+    // Convert InventoryItem to ProductModel for compatibility
+    final ProductModel product = ProductModel(
+      id: item.productId,
+      name: item.name,
+      images: item.imageUrl.isNotEmpty ? [item.imageUrl] : [],
+      petType: item.category,
+      category: item.category,
+      foodType: '', // Not available in InventoryItem
+      weight: '', // Not available in InventoryItem
+      stockQuantity: item.currentStock,
+      sellingPrice: item.price,
+      mrp: item.price, // Using price as MRP since costPrice might be different
+      discount: 0, // Not available in InventoryItem
+      status: item.currentStock > 0 ? 'active' : 'out_of_stock',
+      description: '', // Not available in InventoryItem
+      benefits: [], // Not available in InventoryItem
+      deliveryEstimate: '', // Not available in InventoryItem
+      stockStatus:
+          item.currentStock <= item.minStockLevel
+              ? 'Low Stock'
+              : item.currentStock == 0
+              ? 'Out of Stock'
+              : 'In Stock',
     );
+
+    Get.toNamed(AppRoutes.productDetails, arguments: product);
   }
 
   void navigateToAddProduct() {

@@ -349,22 +349,28 @@ class ReportsScreen extends StatelessWidget {
                 SizedBox(width: 8),
                 Icon(Icons.access_time, size: 14, color: Colors.grey[500]),
                 SizedBox(width: 4),
-                Text(
-                  report.estimatedTime,
-                  style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                Flexible(
+                  child: Text(
+                    report.estimatedTime,
+                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
           ],
         ),
-        trailing: ElevatedButton(
-          onPressed: () => _showReportParametersDialog(report, primaryColor),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: primaryColor,
-            foregroundColor: Colors.black,
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        trailing: SizedBox(
+          width: 80,
+          child: ElevatedButton(
+            onPressed: () => _showReportParametersDialog(report, primaryColor),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryColor,
+              foregroundColor: Colors.black,
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            ),
+            child: Text('Generate', style: TextStyle(fontSize: 11)),
           ),
-          child: Text('Generate', style: TextStyle(fontSize: 12)),
         ),
       ),
     );
@@ -433,9 +439,12 @@ class ReportsScreen extends StatelessWidget {
                 ),
                 SizedBox(width: 8),
                 if (report.fileSize.isNotEmpty) ...[
-                  Text(
-                    '${report.format} • ${report.fileSize}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  Flexible(
+                    child: Text(
+                      '${report.format} • ${report.fileSize}',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ],
@@ -605,11 +614,14 @@ class ReportsScreen extends StatelessWidget {
               children: [
                 Icon(Icons.date_range, color: Colors.grey[600]),
                 SizedBox(width: 8),
-                Text(
-                  parameters[param.key] != null
-                      ? 'Selected: ${parameters[param.key]}'
-                      : 'Select date range',
-                  style: TextStyle(color: Colors.grey[700]),
+                Flexible(
+                  child: Text(
+                    parameters[param.key] != null
+                        ? 'Selected: ${parameters[param.key]}'
+                        : 'Select date range',
+                    style: TextStyle(color: Colors.grey[700]),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),

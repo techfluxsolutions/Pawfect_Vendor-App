@@ -28,7 +28,7 @@ class AlertsScreen extends StatelessWidget {
 
   PreferredSizeWidget _buildAppBar(Color primaryColor) {
     return AppBar(
-      title: Text('Alerts & Notifications'),
+      title: Text('Alerts'),
       backgroundColor: primaryColor,
       foregroundColor: Colors.black,
       elevation: 0,

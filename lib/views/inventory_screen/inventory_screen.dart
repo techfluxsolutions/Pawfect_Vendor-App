@@ -32,13 +32,6 @@ class InventoryScreen extends StatelessWidget {
                   child: _buildContent(primaryColor),
                 ),
       ),
-      // floatingActionButton: FloatingActionButton.extended(
-      //   onPressed: controller.navigateToAddProduct,
-      //   backgroundColor: primaryColor,
-      //   foregroundColor: Colors.black,
-      //   icon: Icon(Icons.add),
-      //   label: Text('Add Product'),
-      // ),
     );
   }
 
@@ -163,22 +156,31 @@ class InventoryScreen extends StatelessWidget {
   Widget _buildContent(Color primaryColor) {
     return Column(
       children: [
-        // Search Bar
+        // Fixed Search Bar
         _buildSearchBar(primaryColor),
 
-        // Summary Cards
-        _buildSummarySection(primaryColor),
-
-        // Active Filters
-        Obx(() => _buildActiveFilters(primaryColor)),
-        SizedBox(height: 16),
-        // Inventory List
+        // Scrollable Content
         Expanded(
-          child: Obx(
-            () =>
-                controller.filteredItems.isEmpty
-                    ? _buildEmptyState(primaryColor)
-                    : _buildInventoryList(primaryColor),
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            child: Column(
+              children: [
+                // Summary Cards
+                _buildSummarySection(primaryColor),
+                SizedBox(height: 16),
+
+                // Active Filters
+                Obx(() => _buildActiveFilters(primaryColor)),
+
+                // Inventory List
+                Obx(
+                  () =>
+                      controller.filteredItems.isEmpty
+                          ? _buildEmptyState(primaryColor)
+                          : _buildInventoryList(primaryColor),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -525,13 +527,14 @@ class InventoryScreen extends StatelessWidget {
   }
 
   Widget _buildInventoryList(Color primaryColor) {
-    return ListView.builder(
-      controller: _scrollController,
+    return Container(
       padding: EdgeInsets.symmetric(horizontal: 16),
-      itemCount: controller.filteredItems.length + 1,
-      itemBuilder: (context, index) {
-        if (index == controller.filteredItems.length) {
-          return Obx(
+      child: Column(
+        children: [
+          ...controller.filteredItems.map(
+            (item) => _buildInventoryCard(item, primaryColor),
+          ),
+          Obx(
             () =>
                 controller.isLoadingMore.value
                     ? Container(
@@ -539,12 +542,9 @@ class InventoryScreen extends StatelessWidget {
                       child: Center(child: CircularProgressIndicator()),
                     )
                     : SizedBox.shrink(),
-          );
-        }
-
-        final item = controller.filteredItems[index];
-        return _buildInventoryCard(item, primaryColor);
-      },
+          ),
+        ],
+      ),
     );
   }
 
@@ -634,9 +634,12 @@ class InventoryScreen extends StatelessWidget {
             SizedBox(height: 4),
             Row(
               children: [
-                Text(
-                  'SKU: ${item.sku}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                Flexible(
+                  child: Text(
+                    'SKU: ${item.sku}',
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 SizedBox(width: 8),
                 Container(
@@ -660,11 +663,13 @@ class InventoryScreen extends StatelessWidget {
             Text(
               '${item.category} • ${item.supplier}',
               style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+              overflow: TextOverflow.ellipsis,
             ),
             SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
+                  flex: 2,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -679,26 +684,33 @@ class InventoryScreen extends StatelessWidget {
                       Text(
                         'Min: ${item.minStockLevel} • Max: ${item.maxStockLevel}',
                         style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      item.formattedPrice,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: primaryColor,
+                SizedBox(width: 8),
+                Expanded(
+                  flex: 1,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        item.formattedPrice,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: primaryColor,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    Text(
-                      'Value: ${item.formattedStockValue}',
-                      style: TextStyle(fontSize: 11, color: Colors.grey[500]),
-                    ),
-                  ],
+                      Text(
+                        'Value: ${item.formattedStockValue}',
+                        style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

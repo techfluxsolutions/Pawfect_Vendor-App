@@ -138,6 +138,7 @@ class NotificationsScreen extends StatelessWidget {
 
         // Active Filters
         Obx(() => _buildActiveFilters(primaryColor)),
+        SizedBox(height: 16),
 
         // Notifications List
         Expanded(
