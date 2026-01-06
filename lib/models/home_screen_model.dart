@@ -1,6 +1,6 @@
 // ========== Alert Models ==========
 
-enum AlertType { lowStock, pendingApproval, newOrder, general }
+enum AlertType { lowStock, newOrder, general }
 
 class AlertModel {
   final AlertType type;
@@ -41,8 +41,6 @@ class AlertModel {
     switch (type.toLowerCase()) {
       case 'lowstock':
         return AlertType.lowStock;
-      case 'pendingapproval':
-        return AlertType.pendingApproval;
       case 'neworder':
         return AlertType.newOrder;
       default:

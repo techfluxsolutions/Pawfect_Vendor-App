@@ -38,6 +38,7 @@ class AppPages {
       page: () => TransactionHistoryScreen(),
     ),
     GetPage(name: AppRoutes.orders, page: () => OrdersScreen()),
+    GetPage(name: AppRoutes.orderDetails, page: () => OrderDetailsScreen()),
     GetPage(name: AppRoutes.notifications, page: () => NotificationsScreen()),
     GetPage(name: AppRoutes.alertsManagement, page: () => AlertsScreen()),
     GetPage(name: AppRoutes.analytics, page: () => AnalyticsScreen()),

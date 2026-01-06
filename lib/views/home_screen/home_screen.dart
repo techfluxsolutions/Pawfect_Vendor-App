@@ -431,10 +431,6 @@ class HomeScreen extends StatelessWidget {
         alertColor = Colors.orange;
         alertIcon = Icons.inventory_2;
         break;
-      case AlertType.pendingApproval:
-        alertColor = Colors.blue;
-        alertIcon = Icons.pending_actions;
-        break;
       case AlertType.newOrder:
         alertColor = Colors.green;
         alertIcon = Icons.shopping_bag;

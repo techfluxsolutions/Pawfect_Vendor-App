@@ -162,12 +162,6 @@ class HomeScreenController extends GetxController {
         count: 5,
       ),
       AlertModel(
-        type: AlertType.pendingApproval,
-        title: 'Pending Approval',
-        message: '3 products awaiting approval',
-        count: 3,
-      ),
-      AlertModel(
         type: AlertType.newOrder,
         title: 'New Orders',
         message: '2 new orders received',

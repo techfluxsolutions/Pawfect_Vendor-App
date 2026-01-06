@@ -47,8 +47,11 @@ export 'package:pawfect_vendor_app/views/earnings_payments_screens/bank_details_
 export 'package:pawfect_vendor_app/views/earnings_payments_screens/payment_methods_screen.dart';
 export 'package:pawfect_vendor_app/views/earnings_payments_screens/transaction_history_screen.dart';
 export 'package:pawfect_vendor_app/views/orders_screen/orders_screen.dart';
+export 'package:pawfect_vendor_app/views/order_details_screen/order_details_screen.dart';
 export 'package:pawfect_vendor_app/views/product_details_screen/product_details_screen.dart';
 export 'package:pawfect_vendor_app/views/notifications_screen/notifications_screen.dart';
 export 'package:pawfect_vendor_app/views/alerts_screen/alerts_screen.dart';
 export 'package:pawfect_vendor_app/views/analytics_screen/analytics_screen.dart';
 export 'package:pawfect_vendor_app/views/reports_screen/reports_screen.dart';
+export 'package:pawfect_vendor_app/controllers/order_controller.dart';
+export 'package:pawfect_vendor_app/models/order_model.dart';

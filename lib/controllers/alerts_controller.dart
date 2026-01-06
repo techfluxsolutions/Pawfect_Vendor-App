@@ -24,7 +24,6 @@ class AlertsController extends GetxController {
   final List<Map<String, String>> filterOptions = [
     {'value': 'all', 'label': 'All Alerts'},
     {'value': 'lowStock', 'label': 'Low Stock'},
-    {'value': 'pendingApproval', 'label': 'Pending Approval'},
     {'value': 'newOrder', 'label': 'New Orders'},
     {'value': 'general', 'label': 'General'},
   ];
@@ -93,20 +92,6 @@ class AlertsController extends GetxController {
         message: 'Dog Treats Pack - Only 3 units left',
         count: 3,
         actionRoute: AppRoutes.inventory,
-      ),
-      AlertModel(
-        type: AlertType.pendingApproval,
-        title: 'Product Approval Required',
-        message: 'Cat Toy Interactive Ball - Pending admin approval',
-        count: 1,
-        actionRoute: AppRoutes.product,
-      ),
-      AlertModel(
-        type: AlertType.pendingApproval,
-        title: 'Product Approval Required',
-        message: 'Dog Leash Premium - Pending admin approval',
-        count: 1,
-        actionRoute: AppRoutes.product,
       ),
       AlertModel(
         type: AlertType.newOrder,
@@ -198,8 +183,6 @@ class AlertsController extends GetxController {
     switch (type) {
       case 'lowStock':
         return AlertType.lowStock;
-      case 'pendingApproval':
-        return AlertType.pendingApproval;
       case 'newOrder':
         return AlertType.newOrder;
       case 'general':
@@ -386,8 +369,6 @@ class AlertsController extends GetxController {
     switch (type) {
       case AlertType.lowStock:
         return Icons.inventory_2;
-      case AlertType.pendingApproval:
-        return Icons.pending_actions;
       case AlertType.newOrder:
         return Icons.shopping_bag;
       case AlertType.general:
@@ -401,8 +382,6 @@ class AlertsController extends GetxController {
     switch (type) {
       case AlertType.lowStock:
         return Colors.orange;
-      case AlertType.pendingApproval:
-        return Colors.blue;
       case AlertType.newOrder:
         return Colors.green;
       case AlertType.general:
@@ -416,8 +395,6 @@ class AlertsController extends GetxController {
     switch (type) {
       case AlertType.lowStock:
         return 'Low Stock';
-      case AlertType.pendingApproval:
-        return 'Pending Approval';
       case AlertType.newOrder:
         return 'New Order';
       case AlertType.general:
