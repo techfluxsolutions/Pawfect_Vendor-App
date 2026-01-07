@@ -212,16 +212,16 @@ class ProfileScreen extends StatelessWidget {
           ),
           SizedBox(height: 16),
           // Owner Name
-          Obx(
-            () => _buildInfoRow(
-              Icons.person_outline,
-              'Owner Name',
-              controller.ownerName.value,
-              primaryColor,
-              onTap: controller.editOwnerName,
-            ),
-          ),
-          Divider(height: 24),
+          // Obx(
+          //   () => _buildInfoRow(
+          //     Icons.person_outline,
+          //     'Owner Name',
+          //     controller.ownerName.value,
+          //     primaryColor,
+          //     onTap: controller.editOwnerName,
+          //   ),
+          // ),
+          // Divider(height: 24),
           // Email
           // Obx(
           //   () => _buildInfoRow(
@@ -277,6 +277,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
               Container(width: 1, height: 40, color: Colors.grey[300]),
+              SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

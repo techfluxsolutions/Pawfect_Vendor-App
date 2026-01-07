@@ -1,5 +1,4 @@
 import '../../libs.dart';
-import '../../controllers/order_controller.dart';
 
 class OrderScreen extends StatelessWidget {
   OrderScreen({super.key});
@@ -124,23 +123,31 @@ class OrderScreen extends StatelessWidget {
   Widget _buildContent(Color primaryColor) {
     return Column(
       children: [
-        // Search Bar
+        // Fixed Search Bar
         _buildSearchBar(primaryColor),
 
-        // Summary Cards
-        _buildSummarySection(primaryColor),
-        SizedBox(height: 12),
-
-        // Active Filters
-        Obx(() => _buildActiveFilters(primaryColor)),
-
-        // Orders List
+        // Scrollable Content
         Expanded(
-          child: Obx(
-            () =>
-                controller.filteredOrders.isEmpty
-                    ? _buildEmptyState(primaryColor)
-                    : _buildOrdersList(primaryColor),
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            child: Column(
+              children: [
+                // Summary Cards
+                _buildSummarySection(primaryColor),
+                SizedBox(height: 16),
+
+                // Active Filters
+                Obx(() => _buildActiveFilters(primaryColor)),
+
+                // Orders List
+                Obx(
+                  () =>
+                      controller.filteredOrders.isEmpty
+                          ? _buildEmptyState(primaryColor)
+                          : _buildOrdersListContent(primaryColor),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -486,14 +493,17 @@ class OrderScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildOrdersList(Color primaryColor) {
-    return ListView.builder(
-      controller: _scrollController,
+  Widget _buildOrdersListContent(Color primaryColor) {
+    return Container(
       padding: EdgeInsets.symmetric(horizontal: 16),
-      itemCount: controller.filteredOrders.length + 1,
-      itemBuilder: (context, index) {
-        if (index == controller.filteredOrders.length) {
-          return Obx(
+      child: Column(
+        children: [
+          ...controller.filteredOrders
+              .map((order) => _buildOrderCard(order, primaryColor))
+              .toList(),
+
+          // Loading more indicator
+          Obx(
             () =>
                 controller.isLoadingMore.value
                     ? Container(
@@ -501,12 +511,9 @@ class OrderScreen extends StatelessWidget {
                       child: Center(child: CircularProgressIndicator()),
                     )
                     : SizedBox.shrink(),
-          );
-        }
-
-        final order = controller.filteredOrders[index];
-        return _buildOrderCard(order, primaryColor);
-      },
+          ),
+        ],
+      ),
     );
   }
 
