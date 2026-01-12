@@ -347,29 +347,32 @@ class OrdersScreen extends StatelessWidget {
   Widget _buildEmptyState(Color primaryColor) {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(40),
+        padding: EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               Icons.shopping_bag_outlined,
-              size: 80,
+              size: 64,
               color: Colors.grey[300],
             ),
-            SizedBox(height: 16),
+            SizedBox(height: 12),
             Text(
               'No Orders Found',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: Colors.grey[600],
               ),
             ),
-            SizedBox(height: 8),
+            SizedBox(height: 6),
             Text(
               'Orders will appear here when customers place them',
-              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+              style: TextStyle(fontSize: 13, color: Colors.grey[500]),
               textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

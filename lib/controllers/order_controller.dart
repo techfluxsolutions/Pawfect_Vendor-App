@@ -1,19 +1,28 @@
+import 'dart:async';
+import 'dart:developer';
 import '../libs.dart';
 
 class OrderController extends GetxController {
+  final OrdersService _ordersService = OrdersService();
+
   // Loading States
   var isLoading = false.obs;
   var isRefreshing = false.obs;
   var isLoadingMore = false.obs;
   var isUpdatingOrder = false.obs;
 
-  // Data
+  // API Data
+  var ordersResponse = Rxn<OrdersResponseModel>();
+  var apiOrders = <OrdersApiModel>[].obs;
+
+  // Legacy Data (for UI compatibility)
   var orders = <VendorOrderModel>[].obs;
   var filteredOrders = <VendorOrderModel>[].obs;
 
   // Filters
   var searchQuery = ''.obs;
   var selectedStatus = 'all'.obs;
+  var selectedPaymentStatus = 'all'.obs;
   var selectedDateRange = 'all'.obs;
   var sortBy = 'date'.obs;
   var sortOrder = 'desc'.obs;
@@ -26,14 +35,20 @@ class OrderController extends GetxController {
   // Filter Options
   final List<Map<String, String>> statusOptions = [
     {'value': 'all', 'label': 'All Orders'},
-    {'value': 'pending', 'label': 'Pending'},
-    {'value': 'confirmed', 'label': 'Confirmed'},
-    {'value': 'processing', 'label': 'Processing'},
-    {'value': 'packed', 'label': 'Packed'},
-    {'value': 'shipped', 'label': 'Shipped'},
-    {'value': 'delivered', 'label': 'Delivered'},
-    {'value': 'cancelled', 'label': 'Cancelled'},
-    {'value': 'returned', 'label': 'Returned'},
+    {'value': 'Pending', 'label': 'Pending'},
+    {'value': 'Processing', 'label': 'Processing'},
+    {'value': 'Completed', 'label': 'Completed'},
+    {'value': 'Shipped', 'label': 'Shipped'},
+    {'value': 'Delivered', 'label': 'Delivered'},
+    {'value': 'Cancelled', 'label': 'Cancelled'},
+  ];
+
+  final List<Map<String, String>> paymentStatusOptions = [
+    {'value': 'all', 'label': 'All Payments'},
+    {'value': 'Pending', 'label': 'Pending'},
+    {'value': 'Completed', 'label': 'Completed'},
+    {'value': 'Failed', 'label': 'Failed'},
+    {'value': 'Refunded', 'label': 'Refunded'},
   ];
 
   final List<Map<String, String>> dateRangeOptions = [
@@ -55,36 +70,97 @@ class OrderController extends GetxController {
   void onInit() {
     super.onInit();
     loadOrders();
-
-    // Setup reactive filtering
-    ever(searchQuery, (_) => _applyFilters());
-    ever(selectedStatus, (_) => _applyFilters());
-    ever(selectedDateRange, (_) => _applyFilters());
-    ever(sortBy, (_) => _applyFilters());
-    ever(sortOrder, (_) => _applyFilters());
   }
 
-  // ========== Data Loading ==========
-
+  // ══════════════════════════════════════════════════════════════════════════
+  // LOAD ORDERS FROM API
+  // ══════════════════════════════════════════════════════════════════════════
   Future<void> loadOrders() async {
     try {
       isLoading.value = true;
       currentPage.value = 1;
       hasMoreData.value = true;
 
-      // Simulate API call
-      await Future.delayed(Duration(seconds: 1));
+      log('📦 Loading orders from API...');
 
-      orders.value = _generateDummyOrders();
+      final response = await _ordersService.getOrders(
+        search: searchQuery.value.isNotEmpty ? searchQuery.value : null,
+        status: selectedStatus.value != 'all' ? selectedStatus.value : null,
+        paymentStatus:
+            selectedPaymentStatus.value != 'all'
+                ? selectedPaymentStatus.value
+                : null,
+        sortBy: sortBy.value,
+        sortOrder: sortOrder.value,
+        page: currentPage.value,
+        limit: itemsPerPage,
+      );
+
+      if (response.success && response.data != null) {
+        final ordersData = response.data!;
+
+        // Store API response
+        ordersResponse.value = ordersData;
+        apiOrders.value = ordersData.orders;
+
+        // Convert to VendorOrderModel for UI compatibility
+        _convertToVendorOrderModel();
+
+        log('✅ Orders loaded successfully: ${ordersData.orders.length} orders');
+
+        // Check if we have more data
+        hasMoreData.value = ordersData.orders.length >= itemsPerPage;
+      } else {
+        log('⚠️ Orders API failed: ${response.message}');
+        // Load dummy data as fallback
+        orders.value = _generateDummyOrders();
+        _showInfoSnackbar('Using sample order data');
+      }
+
       _applyFilters();
-
-      print('✅ Orders loaded successfully');
     } catch (e) {
-      print('❌ Error loading orders: $e');
-      Get.snackbar('Error', 'Failed to load orders');
+      log('❌ Error loading orders: $e');
+      // Load dummy data as fallback
+      orders.value = _generateDummyOrders();
+      _showErrorSnackbar('Failed to load orders');
     } finally {
       isLoading.value = false;
     }
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // CONVERT API DATA TO VENDOR ORDER MODEL
+  // ══════════════════════════════════════════════════════════════════════════
+  void _convertToVendorOrderModel() {
+    final vendorOrders =
+        apiOrders.map((apiOrder) {
+          return VendorOrderModel(
+            id: apiOrder.orderId,
+            customerName: apiOrder.clientName,
+            customerPhone: apiOrder.phoneNumber,
+            customerEmail: '', // Not provided in API
+            customerAddress: '', // Not provided in API
+            orderDate:
+                apiOrder.estimatedDate, // Using estimated date as order date
+            status: apiOrder.status.toLowerCase(),
+            paymentMethod: apiOrder.paymentStatus,
+            paymentStatus: apiOrder.paymentStatus.toLowerCase(),
+            totalAmount: apiOrder.totalPrice,
+            deliveryFee: 0.0, // Not provided in API
+            discount: 0.0, // Not provided in API
+            items: [
+              OrderItemModel(
+                productId: apiOrder.orderId, // Using order ID as product ID
+                productName: apiOrder.productName,
+                quantity: apiOrder.quantity,
+                price: apiOrder.price,
+                imageUrl: apiOrder.productImage,
+              ),
+            ],
+          );
+        }).toList();
+
+    orders.value = vendorOrders;
   }
 
   Future<void> refreshOrders() async {
@@ -103,107 +179,58 @@ class OrderController extends GetxController {
       isLoadingMore.value = true;
       currentPage.value++;
 
-      // Simulate API call
-      await Future.delayed(Duration(milliseconds: 500));
+      final response = await _ordersService.getOrders(
+        search: searchQuery.value.isNotEmpty ? searchQuery.value : null,
+        status: selectedStatus.value != 'all' ? selectedStatus.value : null,
+        paymentStatus:
+            selectedPaymentStatus.value != 'all'
+                ? selectedPaymentStatus.value
+                : null,
+        sortBy: sortBy.value,
+        sortOrder: sortOrder.value,
+        page: currentPage.value,
+        limit: itemsPerPage,
+      );
 
-      // In real app, load more data from API
-      // For demo, we'll just mark as no more data after page 3
-      if (currentPage.value >= 3) {
+      if (response.success && response.data != null) {
+        final newOrders = response.data!.orders;
+        apiOrders.addAll(newOrders);
+        _convertToVendorOrderModel();
+        _applyFilters();
+
+        hasMoreData.value = newOrders.length >= itemsPerPage;
+      } else {
         hasMoreData.value = false;
       }
     } catch (e) {
-      print('❌ Error loading more orders: $e');
+      log('❌ Error loading more orders: $e');
+      hasMoreData.value = false;
     } finally {
       isLoadingMore.value = false;
     }
   }
 
-  // ========== Filtering & Sorting ==========
-
-  void _applyFilters() {
-    var filtered =
-        orders.where((order) {
-          // Search filter
-          if (searchQuery.value.isNotEmpty) {
-            final query = searchQuery.value.toLowerCase();
-            if (!order.id.toLowerCase().contains(query) &&
-                !order.customerName.toLowerCase().contains(query) &&
-                !order.customerPhone.toLowerCase().contains(query)) {
-              return false;
-            }
-          }
-
-          // Status filter
-          if (selectedStatus.value != 'all' &&
-              order.status != selectedStatus.value) {
-            return false;
-          }
-
-          // Date range filter
-          if (selectedDateRange.value != 'all') {
-            final now = DateTime.now();
-            final orderDate = order.orderDate;
-
-            switch (selectedDateRange.value) {
-              case 'today':
-                if (!_isSameDay(orderDate, now)) return false;
-                break;
-              case 'week':
-                if (now.difference(orderDate).inDays > 7) return false;
-                break;
-              case 'month':
-                if (now.difference(orderDate).inDays > 30) return false;
-                break;
-              case 'quarter':
-                if (now.difference(orderDate).inDays > 90) return false;
-                break;
-            }
-          }
-
-          return true;
-        }).toList();
-
-    // Apply sorting
-    filtered.sort((a, b) {
-      int comparison = 0;
-
-      switch (sortBy.value) {
-        case 'date':
-          comparison = a.orderDate.compareTo(b.orderDate);
-          break;
-        case 'amount':
-          comparison = a.totalAmount.compareTo(b.totalAmount);
-          break;
-        case 'status':
-          comparison = a.status.compareTo(b.status);
-          break;
-        case 'customer':
-          comparison = a.customerName.compareTo(b.customerName);
-          break;
-      }
-
-      return sortOrder.value == 'desc' ? -comparison : comparison;
-    });
-
-    filteredOrders.value = filtered;
-  }
-
-  bool _isSameDay(DateTime date1, DateTime date2) {
-    return date1.year == date2.year &&
-        date1.month == date2.month &&
-        date1.day == date2.day;
-  }
-
+  // ══════════════════════════════════════════════════════════════════════════
+  // FILTERING & SORTING
+  // ══════════════════════════════════════════════════════════════════════════
   void setSearchQuery(String query) {
     searchQuery.value = query;
+    _debounceSearch();
   }
 
   void setStatusFilter(String status) {
     selectedStatus.value = status;
+    _reloadWithFilters();
+  }
+
+  void setPaymentStatusFilter(String paymentStatus) {
+    selectedPaymentStatus.value = paymentStatus;
+    _reloadWithFilters();
   }
 
   void setDateRangeFilter(String range) {
     selectedDateRange.value = range;
+    _reloadWithFilters();
   }
 
   void setSortBy(String sort) {
@@ -214,18 +241,43 @@ class OrderController extends GetxController {
       sortBy.value = sort;
       sortOrder.value = 'desc';
     }
+    _reloadWithFilters();
+  }
+
+  // Debounce search to avoid too many API calls
+  Timer? _searchTimer;
+  void _debounceSearch() {
+    _searchTimer?.cancel();
+    _searchTimer = Timer(Duration(milliseconds: 500), () {
+      _reloadWithFilters();
+    });
+  }
+
+  void _reloadWithFilters() {
+    currentPage.value = 1;
+    hasMoreData.value = true;
+    loadOrders();
+  }
+
+  void _applyFilters() {
+    // Since we're using API filtering, this method now just applies local sorting if needed
+    // Most filtering is done server-side via API parameters
+    filteredOrders.value = List.from(orders);
   }
 
   void clearFilters() {
     searchQuery.value = '';
     selectedStatus.value = 'all';
+    selectedPaymentStatus.value = 'all';
     selectedDateRange.value = 'all';
     sortBy.value = 'date';
     sortOrder.value = 'desc';
+    _reloadWithFilters();
   }
 
-  // ========== Order Management ==========
-
+  // ══════════════════════════════════════════════════════════════════════════
+  // ORDER MANAGEMENT
+  // ══════════════════════════════════════════════════════════════════════════
   Future<void> updateOrderStatus(
     VendorOrderModel order,
     String newStatus,
@@ -233,25 +285,28 @@ class OrderController extends GetxController {
     try {
       isUpdatingOrder.value = true;
 
-      // Simulate API call
-      await Future.delayed(Duration(milliseconds: 800));
-
-      // Update order status
-      final index = orders.indexWhere((o) => o.id == order.id);
-      if (index != -1) {
-        orders[index] = order.copyWith(status: newStatus);
-        _applyFilters();
-      }
-
-      Get.snackbar(
-        'Success',
-        'Order ${order.id} status updated to ${_getStatusLabel(newStatus)}',
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
+      final response = await _ordersService.updateOrderStatus(
+        orderId: order.id,
+        status: newStatus,
       );
+
+      if (response.success) {
+        // Update local data
+        final index = orders.indexWhere((o) => o.id == order.id);
+        if (index != -1) {
+          orders[index] = order.copyWith(status: newStatus);
+          _applyFilters();
+        }
+
+        _showSuccessSnackbar(
+          'Order ${order.id} status updated to ${_getStatusLabel(newStatus)}',
+        );
+      } else {
+        _showErrorSnackbar(response.message ?? 'Failed to update order status');
+      }
     } catch (e) {
-      print('❌ Error updating order status: $e');
-      Get.snackbar('Error', 'Failed to update order status');
+      log('❌ Error updating order status: $e');
+      _showErrorSnackbar('Failed to update order status');
     } finally {
       isUpdatingOrder.value = false;
     }
@@ -264,27 +319,29 @@ class OrderController extends GetxController {
     )['label']!;
   }
 
-  // ========== Navigation ==========
-
+  // ══════════════════════════════════════════════════════════════════════════
+  // NAVIGATION
+  // ══════════════════════════════════════════════════════════════════════════
   void navigateToOrderDetails(VendorOrderModel order) {
     Get.toNamed(AppRoutes.orderDetails, arguments: order);
   }
 
-  // ========== Helper Methods ==========
-
+  // ══════════════════════════════════════════════════════════════════════════
+  // HELPER METHODS
+  // ══════════════════════════════════════════════════════════════════════════
   Color getStatusColor(String status) {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case 'pending':
         return Colors.orange;
       case 'confirmed':
-        return Colors.blue;
       case 'processing':
-        return Colors.purple;
+        return Colors.blue;
       case 'packed':
-        return Colors.indigo;
+        return Colors.purple;
       case 'shipped':
         return Colors.teal;
       case 'delivered':
+      case 'completed':
         return Colors.green;
       case 'cancelled':
         return Colors.red;
@@ -296,7 +353,7 @@ class OrderController extends GetxController {
   }
 
   IconData getStatusIcon(String status) {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case 'pending':
         return Icons.schedule;
       case 'confirmed':
@@ -308,6 +365,7 @@ class OrderController extends GetxController {
       case 'shipped':
         return Icons.local_shipping;
       case 'delivered':
+      case 'completed':
         return Icons.done_all;
       case 'cancelled':
         return Icons.cancel;
@@ -318,24 +376,65 @@ class OrderController extends GetxController {
     }
   }
 
-  // ========== Computed Properties ==========
-
-  int get totalOrders => orders.length;
-  int get pendingOrders => orders.where((o) => o.status == 'pending').length;
+  // ══════════════════════════════════════════════════════════════════════════
+  // COMPUTED PROPERTIES
+  // ══════════════════════════════════════════════════════════════════════════
+  int get totalOrders =>
+      ordersResponse.value?.summary.totalOrders ?? orders.length;
+  int get pendingOrders =>
+      ordersResponse.value?.summary.statusCounts['Pending'] ??
+      orders.where((o) => o.status == 'pending').length;
   int get processingOrders =>
+      ordersResponse.value?.summary.statusCounts['Processing'] ??
       orders
           .where(
             (o) => ['confirmed', 'processing', 'packed'].contains(o.status),
           )
           .length;
   int get completedOrders =>
+      ordersResponse.value?.summary.statusCounts['Completed'] ??
       orders.where((o) => o.status == 'delivered').length;
 
-  double get totalRevenue => orders
-      .where((o) => o.status == 'delivered')
-      .fold(0.0, (sum, order) => sum + order.totalAmount);
+  double get totalRevenue =>
+      ordersResponse.value?.summary.totalRevenue ??
+      orders
+          .where((o) => o.status == 'delivered')
+          .fold(0.0, (sum, order) => sum + order.totalAmount);
 
   String get formattedTotalRevenue => '₹${totalRevenue.toStringAsFixed(2)}';
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SNACKBAR HELPERS
+  // ══════════════════════════════════════════════════════════════════════════
+  void _showSuccessSnackbar(String message) {
+    Get.snackbar(
+      'Success',
+      message,
+      backgroundColor: Colors.green,
+      colorText: Colors.white,
+      duration: Duration(seconds: 2),
+    );
+  }
+
+  void _showErrorSnackbar(String message) {
+    Get.snackbar(
+      'Error',
+      message,
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+      duration: Duration(seconds: 3),
+    );
+  }
+
+  void _showInfoSnackbar(String message) {
+    Get.snackbar(
+      'Info',
+      message,
+      backgroundColor: Colors.blue,
+      colorText: Colors.white,
+      duration: Duration(seconds: 2),
+    );
+  }
 
   // ========== Dummy Data ==========
 

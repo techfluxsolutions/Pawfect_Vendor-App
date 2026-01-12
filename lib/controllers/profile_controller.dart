@@ -1,5 +1,4 @@
 import 'dart:developer';
-import 'package:pawfect_vendor_app/views/earnings_payments_screens/earnings_screen.dart';
 
 import '../libs.dart';
 
@@ -59,6 +58,51 @@ class ProfileController extends GetxController {
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // ========== Store Status Toggle ==========
+
+  Future<void> toggleStoreStatus() async {
+    try {
+      // Show loading state
+      isLoading.value = true;
+
+      // TODO: Replace with actual API call to update store status
+      await Future.delayed(Duration(milliseconds: 800));
+
+      // Toggle the status
+      isStoreActive.value = !isStoreActive.value;
+
+      // Show success message
+      Get.snackbar(
+        'Store Status Updated',
+        'Your store is now ${isStoreActive.value ? 'Active' : 'Inactive'}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: isStoreActive.value ? Colors.green : Colors.orange,
+        colorText: Colors.white,
+        duration: Duration(seconds: 2),
+        icon: Icon(
+          isStoreActive.value ? Icons.check_circle : Icons.pause_circle,
+          color: Colors.white,
+        ),
+      );
+
+      log(
+        '✅ Store status toggled to: ${isStoreActive.value ? 'Active' : 'Inactive'}',
+      );
+    } catch (e) {
+      log('❌ Error toggling store status: $e');
+      Get.snackbar(
+        'Error',
+        'Failed to update store status. Please try again.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        duration: Duration(seconds: 3),
       );
     } finally {
       isLoading.value = false;
@@ -129,19 +173,19 @@ class ProfileController extends GetxController {
   // ========== Earnings & Payments Navigation ==========
 
   void navigateToEarnings() {
-    Get.to(() => EarningsScreen());
+    // Get.to(() => EarningsScreen());
   }
 
   void navigateToBankAccount() {
-    Get.toNamed(AppRoutes.bankDetails);
+    // Get.toNamed(AppRoutes.bankDetails);
   }
 
   void navigateToPaymentMethods() {
-    Get.toNamed(AppRoutes.paymentMethods);
+    // Get.toNamed(AppRoutes.paymentMethods);
   }
 
   void navigateToTransactionHistory() {
-    Get.toNamed(AppRoutes.transactionHistory);
+    // Get.toNamed(AppRoutes.transactionHistory);
   }
 
   void navigateToTaxInfo() {

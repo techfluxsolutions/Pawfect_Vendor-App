@@ -24,7 +24,12 @@ class TransactionHistoryScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: _buildAppBar(primaryColor),
+      appBar: AppBar(
+        title: Text('Transaction History'),
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
       body: Obx(
         () =>
             controller.isLoading.value
@@ -37,92 +42,8 @@ class TransactionHistoryScreen extends StatelessWidget {
     );
   }
 
-  PreferredSizeWidget _buildAppBar(Color primaryColor) {
-    return AppBar(
-      title: Text('Transaction History'),
-      backgroundColor: primaryColor,
-      foregroundColor: Colors.black,
-      elevation: 0,
-      actions: [
-        IconButton(
-          icon: Icon(Icons.file_download, color: Colors.black),
-          onPressed: controller.exportTransactions,
-        ),
-        PopupMenuButton<String>(
-          icon: Icon(Icons.more_vert, color: Colors.black),
-          onSelected: (value) {
-            switch (value) {
-              case 'filter':
-                _showFilterBottomSheet(primaryColor);
-                break;
-              case 'export':
-                controller.exportTransactions();
-                break;
-              case 'clear':
-                controller.clearFilters();
-                break;
-            }
-          },
-          itemBuilder:
-              (context) => [
-                PopupMenuItem(
-                  value: 'filter',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.filter_list,
-                        size: 18,
-                        color: Colors.grey[700],
-                      ),
-                      SizedBox(width: 12),
-                      Text('Filter'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'export',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.file_download,
-                        size: 18,
-                        color: Colors.grey[700],
-                      ),
-                      SizedBox(width: 12),
-                      Text('Export'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'clear',
-                  child: Row(
-                    children: [
-                      Icon(Icons.clear, size: 18, color: Colors.grey[700]),
-                      SizedBox(width: 12),
-                      Text('Clear Filters'),
-                    ],
-                  ),
-                ),
-              ],
-        ),
-      ],
-    );
-  }
-
   Widget _buildLoadingState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(),
-          SizedBox(height: 16),
-          Text(
-            'Loading transactions...',
-            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-          ),
-        ],
-      ),
-    );
+    return Center(child: CircularProgressIndicator());
   }
 
   Widget _buildContent(Color primaryColor) {
@@ -142,7 +63,7 @@ class TransactionHistoryScreen extends StatelessWidget {
           child: Obx(
             () =>
                 controller.filteredTransactions.isEmpty
-                    ? _buildEmptyState(primaryColor)
+                    ? _buildEmptyState()
                     : _buildTransactionList(primaryColor),
           ),
         ),
@@ -156,22 +77,16 @@ class TransactionHistoryScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: Offset(0, 2),
-          ),
-        ],
+        border: Border.all(color: Colors.grey[200]!),
       ),
       child: TextField(
         onChanged: controller.setSearchQuery,
         decoration: InputDecoration(
-          hintText: 'Search by order ID, transaction ID...',
+          hintText: 'Search transactions...',
           hintStyle: TextStyle(color: Colors.grey[400]),
           prefixIcon: Icon(Icons.search, color: primaryColor),
           suffixIcon: IconButton(
-            icon: Icon(Icons.filter_list, color: primaryColor),
+            icon: Icon(Icons.tune, color: primaryColor),
             onPressed: () => _showFilterBottomSheet(primaryColor),
           ),
           border: InputBorder.none,
@@ -183,23 +98,23 @@ class TransactionHistoryScreen extends StatelessWidget {
 
   Widget _buildSummarySection(Color primaryColor) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16),
+      margin: EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: Row(
         children: [
           Expanded(
             child: _buildSummaryCard(
-              'Total Credit',
+              'Credit',
               controller.totalCredit,
-              Icons.add_circle,
+              Icons.arrow_downward,
               Colors.green,
             ),
           ),
           SizedBox(width: 12),
           Expanded(
             child: _buildSummaryCard(
-              'Total Debit',
+              'Debit',
               controller.totalDebit,
-              Icons.remove_circle,
+              Icons.arrow_upward,
               Colors.red,
             ),
           ),
@@ -219,43 +134,18 @@ class TransactionHistoryScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: Offset(0, 2),
-          ),
-        ],
+        border: Border.all(color: Colors.grey[200]!),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: color, size: 20),
-              ),
-              Spacer(),
-            ],
-          ),
-          SizedBox(height: 12),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          Icon(icon, color: color, size: 20),
+          SizedBox(height: 8),
+          Text(title, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
           SizedBox(height: 4),
           Obx(
             () => Text(
-              '₹${amount.value.toStringAsFixed(2)}',
+              '₹${amount.value.toStringAsFixed(0)}',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -277,7 +167,7 @@ class TransactionHistoryScreen extends StatelessWidget {
     if (!hasFilters) return SizedBox.shrink();
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: EdgeInsets.fromLTRB(16, 0, 16, 12),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
@@ -316,7 +206,7 @@ class TransactionHistoryScreen extends StatelessWidget {
                   'Clear All',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.red,
+                    color: Colors.red[600],
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -339,6 +229,7 @@ class TransactionHistoryScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: primaryColor.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: primaryColor.withOpacity(0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -361,7 +252,7 @@ class TransactionHistoryScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState(Color primaryColor) {
+  Widget _buildEmptyState() {
     return Center(
       child: Padding(
         padding: EdgeInsets.all(40),
@@ -370,23 +261,22 @@ class TransactionHistoryScreen extends StatelessWidget {
           children: [
             Icon(
               Icons.receipt_long_outlined,
-              size: 80,
+              size: 64,
               color: Colors.grey[300],
             ),
             SizedBox(height: 16),
             Text(
               'No Transactions Found',
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
                 color: Colors.grey[600],
               ),
             ),
-            SizedBox(height: 8),
+            SizedBox(height: 6),
             Text(
-              'Your transaction history will appear here',
-              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-              textAlign: TextAlign.center,
+              'Your transactions will appear here',
+              style: TextStyle(fontSize: 13, color: Colors.grey[400]),
             ),
           ],
         ),
@@ -406,7 +296,9 @@ class TransactionHistoryScreen extends StatelessWidget {
                 controller.isLoadingMore.value
                     ? Container(
                       padding: EdgeInsets.all(20),
-                      child: Center(child: CircularProgressIndicator()),
+                      child: Center(
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
                     )
                     : SizedBox.shrink(),
           );
@@ -429,102 +321,99 @@ class TransactionHistoryScreen extends StatelessWidget {
 
     return Container(
       margin: EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: Offset(0, 2),
-          ),
-        ],
+        border: Border.all(color: Colors.grey[200]!),
       ),
-      child: ListTile(
-        contentPadding: EdgeInsets.all(16),
-        leading: Container(
-          padding: EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: typeColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            controller.getTransactionTypeIcon(transaction['type']),
-            color: typeColor,
-            size: 24,
-          ),
-        ),
-        title: Row(
+      child: InkWell(
+        onTap: () => controller.viewTransactionDetails(transaction),
+        child: Row(
           children: [
+            Container(
+              padding: EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: typeColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                controller.getTransactionTypeIcon(transaction['type']),
+                color: typeColor,
+                size: 22,
+              ),
+            ),
+            SizedBox(width: 12),
             Expanded(
-              child: Text(
-                transaction['description'],
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[800],
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            Text(
-              '${isCredit ? '+' : '-'}₹${amount.abs().toStringAsFixed(2)}',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: isCredit ? Colors.green : Colors.red,
-              ),
-            ),
-          ],
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 4),
-            Row(
-              children: [
-                Text(
-                  transaction['orderId'],
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
-                SizedBox(width: 8),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    transaction['status'].toString().toUpperCase(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    transaction['description'],
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: statusColor,
+                      color: Colors.grey[800],
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Text(
+                        transaction['orderId'],
+                        style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                      ),
+                      SizedBox(width: 6),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: statusColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          transaction['status'].toString().toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w600,
+                            color: statusColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    '${transaction['date']} ${transaction['time']}',
+                    style: TextStyle(fontSize: 11, color: Colors.grey[400]),
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '${isCredit ? '+' : '-'}₹${amount.abs().toStringAsFixed(0)}',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isCredit ? Colors.green : Colors.red,
                   ),
                 ),
-              ],
-            ),
-            SizedBox(height: 4),
-            Row(
-              children: [
-                Icon(Icons.access_time, size: 12, color: Colors.grey[500]),
-                SizedBox(width: 4),
-                Text(
-                  '${transaction['date']} ${transaction['time']}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-                ),
-                Spacer(),
+                SizedBox(height: 4),
                 Text(
                   transaction['paymentMethod'],
-                  style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                  style: TextStyle(fontSize: 11, color: Colors.grey[500]),
                 ),
               ],
             ),
           ],
         ),
-        onTap: () => controller.viewTransactionDetails(transaction),
       ),
     );
   }
@@ -532,16 +421,16 @@ class TransactionHistoryScreen extends StatelessWidget {
   void _showFilterBottomSheet(Color primaryColor) {
     Get.bottomSheet(
       Container(
-        height: MediaQuery.of(Get.context!).size.height * 0.7,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             // Handle
             Container(
-              margin: EdgeInsets.only(top: 8),
+              margin: EdgeInsets.only(top: 12, bottom: 8),
               width: 40,
               height: 4,
               decoration: BoxDecoration(
@@ -552,7 +441,7 @@ class TransactionHistoryScreen extends StatelessWidget {
 
             // Header
             Padding(
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.fromLTRB(20, 12, 20, 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -565,8 +454,10 @@ class TransactionHistoryScreen extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.close),
+                    icon: Icon(Icons.close, size: 22),
                     onPressed: () => Get.back(),
+                    padding: EdgeInsets.zero,
+                    constraints: BoxConstraints(),
                   ),
                 ],
               ),
@@ -575,41 +466,31 @@ class TransactionHistoryScreen extends StatelessWidget {
             Divider(height: 1),
 
             // Filter Content
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Transaction Type Filter
-                    _buildFilterSection(
-                      'Transaction Type',
-                      controller.filterOptions,
-                      controller.selectedFilter,
-                      controller.setFilter,
-                    ),
+            SingleChildScrollView(
+              padding: EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Transaction Type Filter
+                  _buildFilterSection(
+                    'Transaction Type',
+                    controller.filterOptions,
+                    controller.selectedFilter,
+                    controller.setFilter,
+                    primaryColor,
+                  ),
 
-                    SizedBox(height: 24),
+                  SizedBox(height: 24),
 
-                    // Date Range Filter
-                    _buildFilterSection(
-                      'Date Range',
-                      controller.dateRangeOptions,
-                      controller.selectedDateRange,
-                      controller.setDateRange,
-                    ),
-
-                    SizedBox(height: 24),
-
-                    // Custom Date Range (if selected)
-                    Obx(
-                      () =>
-                          controller.selectedDateRange.value == 'custom'
-                              ? _buildCustomDateRange(primaryColor)
-                              : SizedBox.shrink(),
-                    ),
-                  ],
-                ),
+                  // Date Range Filter
+                  _buildFilterSection(
+                    'Date Range',
+                    controller.dateRangeOptions,
+                    controller.selectedDateRange,
+                    controller.setDateRange,
+                    primaryColor,
+                  ),
+                ],
               ),
             ),
 
@@ -618,13 +499,7 @@ class TransactionHistoryScreen extends StatelessWidget {
               padding: EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: Offset(0, -2),
-                  ),
-                ],
+                border: Border(top: BorderSide(color: Colors.grey[200]!)),
               ),
               child: Row(
                 children: [
@@ -634,7 +509,10 @@ class TransactionHistoryScreen extends StatelessWidget {
                         controller.clearFilters();
                         Get.back();
                       },
-                      child: Text('Clear All'),
+                      style: OutlinedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: Text('Clear'),
                     ),
                   ),
                   SizedBox(width: 12),
@@ -644,9 +522,10 @@ class TransactionHistoryScreen extends StatelessWidget {
                       onPressed: () => Get.back(),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
-                        foregroundColor: Colors.black,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(vertical: 12),
                       ),
-                      child: Text('Apply Filters'),
+                      child: Text('Apply'),
                     ),
                   ),
                 ],
@@ -663,6 +542,7 @@ class TransactionHistoryScreen extends StatelessWidget {
     List<Map<String, String>> options,
     RxString selectedValue,
     Function(String) onSelect,
+    Color primaryColor,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -693,13 +573,13 @@ class TransactionHistoryScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             color:
                                 selectedValue.value == option['value']
-                                    ? Colors.blue.withOpacity(0.1)
+                                    ? primaryColor.withOpacity(0.1)
                                     : Colors.grey[100],
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
                               color:
                                   selectedValue.value == option['value']
-                                      ? Colors.blue
+                                      ? primaryColor
                                       : Colors.grey[300]!,
                             ),
                           ),
@@ -709,7 +589,7 @@ class TransactionHistoryScreen extends StatelessWidget {
                               fontSize: 13,
                               color:
                                   selectedValue.value == option['value']
-                                      ? Colors.blue
+                                      ? primaryColor
                                       : Colors.grey[700],
                               fontWeight:
                                   selectedValue.value == option['value']
@@ -725,118 +605,5 @@ class TransactionHistoryScreen extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  Widget _buildCustomDateRange(Color primaryColor) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Custom Date Range',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey[800],
-          ),
-        ),
-        SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: GestureDetector(
-                onTap: () => _selectDate(true, primaryColor),
-                child: Container(
-                  padding: EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey[300]!),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Start Date',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                      ),
-                      SizedBox(height: 4),
-                      Obx(
-                        () => Text(
-                          '${controller.startDate.value.day}/${controller.startDate.value.month}/${controller.startDate.value.year}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(width: 12),
-            Expanded(
-              child: GestureDetector(
-                onTap: () => _selectDate(false, primaryColor),
-                child: Container(
-                  padding: EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey[300]!),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'End Date',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                      ),
-                      SizedBox(height: 4),
-                      Obx(
-                        () => Text(
-                          '${controller.endDate.value.day}/${controller.endDate.value.month}/${controller.endDate.value.year}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  void _selectDate(bool isStartDate, Color primaryColor) async {
-    final DateTime? picked = await showDatePicker(
-      context: Get.context!,
-      initialDate:
-          isStartDate ? controller.startDate.value : controller.endDate.value,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(
-              context,
-            ).colorScheme.copyWith(primary: primaryColor),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (picked != null) {
-      if (isStartDate) {
-        controller.startDate.value = picked;
-      } else {
-        controller.endDate.value = picked;
-      }
-      controller.applyFilters();
-    }
   }
 }

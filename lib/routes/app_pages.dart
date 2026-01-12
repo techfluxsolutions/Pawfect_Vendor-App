@@ -1,15 +1,3 @@
-// import 'package:pawfect_vendor_app/views/earnings_screen/earnings_screen.dart';
-// import 'package:pawfect_vendor_app/views/earnings_screen/bank_details_screen.dart';
-// import 'package:pawfect_vendor_app/views/earnings_screen/payment_methods_screen.dart';
-// import 'package:pawfect_vendor_app/views/earnings_screen/transaction_history_screen.dart';
-// import 'package:pawfect_vendor_app/views/orders_screen/orders_screen.dart';
-// import 'package:pawfect_vendor_app/views/product_details_screen/product_details_screen.dart';
-// import 'package:pawfect_vendor_app/views/notifications_screen/notifications_screen.dart';
-// import 'package:pawfect_vendor_app/views/alerts_screen/alerts_screen.dart';
-// import 'package:pawfect_vendor_app/views/analytics_screen/analytics_screen.dart';
-// import 'package:pawfect_vendor_app/views/reports_screen/reports_screen.dart';
-import 'package:pawfect_vendor_app/views/inventory_screen/inventory_screen.dart';
-
 import '../libs.dart';
 
 class AppPages {

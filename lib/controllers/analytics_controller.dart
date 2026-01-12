@@ -7,9 +7,12 @@ class AnalyticsController extends GetxController {
   var isRefreshing = false.obs;
   var isExporting = false.obs;
 
+  // Analytics Service
+  final AnalyticsService _analyticsService = AnalyticsService();
+
   // Date Range Selection
-  var selectedDateRange = 'month'.obs;
-  var startDate = DateTime.now().subtract(Duration(days: 30)).obs;
+  var selectedDateRange = 'week'.obs; // Changed default to 'week' to match API
+  var startDate = DateTime.now().subtract(Duration(days: 7)).obs;
   var endDate = DateTime.now().obs;
 
   // Sales Analytics
@@ -54,7 +57,7 @@ class AnalyticsController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    setDateRange('month');
+    setDateRange('week'); // Changed to match API default
     loadAnalytics();
   }
 
@@ -96,26 +99,67 @@ class AnalyticsController extends GetxController {
 
   Future<void> fetchSalesAnalytics() async {
     try {
-      // TODO: Replace with actual API call
-      await Future.delayed(Duration(milliseconds: 500));
+      // Map the selected date range to API period format
+      String apiPeriod = _mapDateRangeToApiPeriod(selectedDateRange.value);
 
-      // Generate dummy sales data based on date range
-      final days = endDate.value.difference(startDate.value).inDays;
+      final response = await _analyticsService.getAnalytics(period: apiPeriod);
 
-      totalRevenue.value = _generateRevenueForPeriod(days);
-      totalOrders.value = _generateOrdersForPeriod(days);
-      averageOrderValue.value =
-          totalOrders.value > 0 ? totalRevenue.value / totalOrders.value : 0.0;
-      conversionRate.value = _generateConversionRate();
+      if (response.success && response.data != null) {
+        final analytics = response.data!;
 
-      // Calculate growth metrics (compared to previous period)
-      revenueGrowth.value = _generateGrowthRate();
-      orderGrowth.value = _generateGrowthRate();
-      customerGrowth.value = _generateGrowthRate();
+        // Update summary data
+        totalRevenue.value = analytics.summary.totalRevenue;
+        totalOrders.value = analytics.summary.totalOrders;
+        revenueGrowth.value = analytics.summary.growth;
+
+        // Update quick stats
+        averageOrderValue.value = analytics.quickStats.avgOrder;
+        totalCustomers.value = analytics.quickStats.customers;
+        totalProducts.value = analytics.quickStats.products;
+        conversionRate.value = analytics.quickStats.conversion;
+
+        log('✅ Sales analytics updated from API');
+      } else {
+        log('⚠️ API response failed: ${response.message}');
+        // Fallback to dummy data if API fails
+        _generateFallbackData();
+      }
     } catch (e) {
       log('❌ Error fetching sales analytics: $e');
-      rethrow;
+      // Fallback to dummy data on error
+      _generateFallbackData();
     }
+  }
+
+  // Helper method to map date range to API period
+  String _mapDateRangeToApiPeriod(String dateRange) {
+    switch (dateRange) {
+      case 'today':
+        return 'daily';
+      case 'week':
+        return 'weekly';
+      case 'month':
+        return 'monthly';
+      case 'quarter':
+        return 'quarterly';
+      case 'year':
+        return 'yearly';
+      default:
+        return 'weekly';
+    }
+  }
+
+  // Fallback method for dummy data
+  void _generateFallbackData() {
+    final days = endDate.value.difference(startDate.value).inDays;
+    totalRevenue.value = _generateRevenueForPeriod(days);
+    totalOrders.value = _generateOrdersForPeriod(days);
+    averageOrderValue.value =
+        totalOrders.value > 0 ? totalRevenue.value / totalOrders.value : 0.0;
+    conversionRate.value = _generateConversionRate();
+    revenueGrowth.value = _generateGrowthRate();
+    orderGrowth.value = _generateGrowthRate();
+    customerGrowth.value = _generateGrowthRate();
   }
 
   // ========== Fetch Order Analytics ==========

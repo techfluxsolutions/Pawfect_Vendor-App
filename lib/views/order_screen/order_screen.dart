@@ -741,21 +741,36 @@ class OrderScreen extends StatelessWidget {
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
             SizedBox(height: 16),
-            ...controller.statusOptions
-                .where((status) => status['value'] != 'all')
-                .map(
-                  (status) => ListTile(
-                    leading: Icon(
-                      controller.getStatusIcon(status['value']!),
-                      color: controller.getStatusColor(status['value']!),
-                    ),
-                    title: Text(status['label']!),
-                    onTap: () {
-                      Get.back();
-                      controller.updateOrderStatus(order, status['value']!);
-                    },
-                  ),
+            // Wrap status options in a flexible scrollable container
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children:
+                      controller.statusOptions
+                          .where((status) => status['value'] != 'all')
+                          .map(
+                            (status) => ListTile(
+                              leading: Icon(
+                                controller.getStatusIcon(status['value']!),
+                                color: controller.getStatusColor(
+                                  status['value']!,
+                                ),
+                              ),
+                              title: Text(status['label']!),
+                              onTap: () {
+                                Get.back();
+                                controller.updateOrderStatus(
+                                  order,
+                                  status['value']!,
+                                );
+                              },
+                            ),
+                          )
+                          .toList(),
                 ),
+              ),
+            ),
             SizedBox(height: 10),
             TextButton(
               onPressed: () => Get.back(),

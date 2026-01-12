@@ -36,14 +36,6 @@ class PaymentMethodsController extends GetxController {
       'color': Colors.orange,
       'isEnabled': true,
     },
-    {
-      'id': 'cheque',
-      'name': 'Cheque',
-      'description': 'Physical cheque payment',
-      'icon': Icons.receipt_long,
-      'color': Colors.purple,
-      'isEnabled': false, // Disabled for now
-    },
   ];
 
   @override

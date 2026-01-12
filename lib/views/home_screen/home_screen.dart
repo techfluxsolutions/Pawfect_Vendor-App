@@ -226,14 +226,14 @@ class HomeScreen extends StatelessWidget {
                 padding: EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
                   children: [
-                    // Row 1
+                    // Row 1 - Sales Overview
                     Row(
                       children: [
                         Expanded(
                           child: _buildStatCard(
-                            'Monthly Sales',
-                            '₹${controller.monthlySales.value.toStringAsFixed(0)}',
-                            Icons.trending_up,
+                            'Total Sales',
+                            '₹${controller.totalSales.value.toStringAsFixed(0)}',
+                            Icons.account_balance_wallet,
                             Colors.green,
                             primaryColor,
                           ),
@@ -241,9 +241,9 @@ class HomeScreen extends StatelessWidget {
                         SizedBox(width: 12),
                         Expanded(
                           child: _buildStatCard(
-                            'Weekly Sales',
-                            '₹${controller.weeklySales.value.toStringAsFixed(0)}',
-                            Icons.calendar_view_week,
+                            'Monthly Sales',
+                            '₹${controller.monthlySales.value.toStringAsFixed(0)}',
+                            Icons.trending_up,
                             Colors.blue,
                             primaryColor,
                           ),
@@ -251,9 +251,19 @@ class HomeScreen extends StatelessWidget {
                       ],
                     ),
                     SizedBox(height: 12),
-                    // Row 2
+                    // Row 2 - Weekly & Daily Sales
                     Row(
                       children: [
+                        Expanded(
+                          child: _buildStatCard(
+                            'Weekly Sales',
+                            '₹${controller.weeklySales.value.toStringAsFixed(0)}',
+                            Icons.calendar_view_week,
+                            Colors.purple,
+                            primaryColor,
+                          ),
+                        ),
+                        SizedBox(width: 12),
                         Expanded(
                           child: _buildStatCard(
                             'Daily Sales',
@@ -263,22 +273,22 @@ class HomeScreen extends StatelessWidget {
                             primaryColor,
                           ),
                         ),
-                        SizedBox(width: 12),
+                      ],
+                    ),
+                    SizedBox(height: 12),
+                    // Row 3 - Orders & Products
+                    Row(
+                      children: [
                         Expanded(
                           child: _buildStatCard(
                             'Total Orders',
                             '${controller.totalOrders.value}',
                             Icons.shopping_bag,
-                            Colors.purple,
+                            Colors.indigo,
                             primaryColor,
                           ),
                         ),
-                      ],
-                    ),
-                    SizedBox(height: 12),
-                    // Row 3
-                    Row(
-                      children: [
+                        SizedBox(width: 12),
                         Expanded(
                           child: _buildStatCard(
                             'Total Products',
@@ -288,17 +298,17 @@ class HomeScreen extends StatelessWidget {
                             primaryColor,
                           ),
                         ),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: _buildStatCard(
-                            'Out of Stock',
-                            '${controller.outOfStockProducts.value}',
-                            Icons.warning_amber,
-                            Colors.red,
-                            primaryColor,
-                          ),
-                        ),
                       ],
+                    ),
+                    SizedBox(height: 12),
+                    // Row 4 - Stock Status (Full Width)
+                    _buildStatCard(
+                      'Out of Stock Products',
+                      '${controller.outOfStockProducts.value}',
+                      Icons.warning_amber,
+                      Colors.red,
+                      primaryColor,
+                      isFullWidth: true,
                     ),
                   ],
                 ),
@@ -348,9 +358,10 @@ class HomeScreen extends StatelessWidget {
     String value,
     IconData icon,
     Color iconColor,
-    Color primaryColor,
-  ) {
-    return Container(
+    Color primaryColor, {
+    bool isFullWidth = false,
+  }) {
+    Widget cardContent = Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -393,6 +404,8 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
     );
+
+    return isFullWidth ? cardContent : cardContent;
   }
 
   Widget _buildAlertsSection(Color primaryColor) {
@@ -694,6 +707,12 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildOrderCard(OrderModel order, Color primaryColor) {
+    // Check if we have detailed API data for this order
+    final apiOrder =
+        controller.recentOrdersFromApi
+            .where((apiOrder) => apiOrder.orderId == order.id)
+            .firstOrNull;
+
     return Container(
       margin: EdgeInsets.only(bottom: 12),
       padding: EdgeInsets.all(16),
@@ -708,68 +727,214 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: primaryColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+      child:
+          apiOrder != null
+              ? _buildEnhancedOrderCard(apiOrder, primaryColor)
+              : _buildBasicOrderCard(order, primaryColor),
+    );
+  }
+
+  Widget _buildEnhancedOrderCard(RecentOrderModel order, Color primaryColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            // Product Image
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: Colors.grey[200],
+              ),
+              child:
+                  order.productImage.isNotEmpty
+                      ? ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          order.productImage,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Icon(
+                              Icons.shopping_bag,
+                              color: primaryColor,
+                              size: 24,
+                            );
+                          },
+                        ),
+                      )
+                      : Icon(Icons.shopping_bag, color: primaryColor, size: 24),
             ),
-            child: Icon(Icons.shopping_bag, color: primaryColor, size: 20),
-          ),
-          SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Order #${order.orderId.substring(0, 8)}...',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[800],
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    order.productName,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey[700],
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    order.clientName,
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  'Order #${order.id}',
+                  order.formattedTotalPrice,
                   style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey[800],
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: primaryColor,
                   ),
                 ),
                 SizedBox(height: 4),
-                Text(
-                  order.customerName,
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(order.status).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    order.status,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: _getStatusColor(order.status),
+                    ),
+                  ),
                 ),
               ],
             ),
+          ],
+        ),
+        SizedBox(height: 12),
+        Row(
+          children: [
+            Icon(Icons.schedule, size: 14, color: Colors.grey[500]),
+            SizedBox(width: 4),
+            Text(
+              order.formattedDate,
+              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+            ),
+            Spacer(),
+            Icon(Icons.inventory_2, size: 14, color: Colors.grey[500]),
+            SizedBox(width: 4),
+            Text(
+              'Qty: ${order.quantity}',
+              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+            ),
+            SizedBox(width: 16),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color:
+                    order.paymentStatus == 'Completed'
+                        ? Colors.green.withValues(alpha: 0.1)
+                        : Colors.orange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                order.paymentStatus,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color:
+                      order.paymentStatus == 'Completed'
+                          ? Colors.green
+                          : Colors.orange,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBasicOrderCard(OrderModel order, Color primaryColor) {
+    return Row(
+      children: [
+        Container(
+          padding: EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: primaryColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          child: Icon(Icons.shopping_bag, color: primaryColor, size: 20),
+        ),
+        SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '₹${order.amount.toStringAsFixed(0)}',
+                'Order #${order.id}',
                 style: TextStyle(
                   fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: primaryColor,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[800],
                 ),
               ),
               SizedBox(height: 4),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _getStatusColor(order.status).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  order.status,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: _getStatusColor(order.status),
-                  ),
-                ),
+              Text(
+                order.customerName,
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
             ],
           ),
-        ],
-      ),
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              '₹${order.amount.toStringAsFixed(0)}',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: primaryColor,
+              ),
+            ),
+            SizedBox(height: 4),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: _getStatusColor(order.status).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                order.status,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: _getStatusColor(order.status),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -894,28 +1059,84 @@ class HomeScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Product Image
-          ClipRRect(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-            child: Container(
-              height: 120,
-              width: double.infinity,
-              color: Colors.grey[200],
-              child:
-                  product.imageUrl.isNotEmpty
-                      ? Image.network(
-                        product.imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Icon(
-                            Icons.image,
-                            size: 40,
-                            color: Colors.grey[400],
-                          );
-                        },
-                      )
-                      : Icon(Icons.image, size: 40, color: Colors.grey[400]),
-            ),
+          // Product Image with Category Badge
+          Stack(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+                child: Container(
+                  height: 120,
+                  width: double.infinity,
+                  color: Colors.grey[200],
+                  child:
+                      product.primaryImage.isNotEmpty
+                          ? Image.network(
+                            product.primaryImage,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Icon(
+                                Icons.pets,
+                                size: 40,
+                                color: Colors.grey[400],
+                              );
+                            },
+                          )
+                          : Icon(Icons.pets, size: 40, color: Colors.grey[400]),
+                ),
+              ),
+              // Category Badge
+              Positioned(
+                top: 8,
+                left: 8,
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: primaryColor.withValues(alpha: 0.9),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    product.category,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              // Multiple Images Indicator
+              if (product.images.length > 1)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.7),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.photo_library,
+                          size: 10,
+                          color: Colors.white,
+                        ),
+                        SizedBox(width: 2),
+                        Text(
+                          '${product.images.length}',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
           ),
           Padding(
             padding: EdgeInsets.all(12),
@@ -937,7 +1158,7 @@ class HomeScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '₹${product.price.toStringAsFixed(0)}',
+                      product.formattedPrice,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -945,13 +1166,13 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: Colors.green[50],
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        '${product.soldCount} sold',
+                        '${product.totalSold} sold',
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,

@@ -84,44 +84,6 @@ class InventoryScreen extends StatelessWidget {
                   ),
                 ),
                 PopupMenuItem(
-                  value: 'bulk_restock',
-                  child: Row(
-                    children: [
-                      Icon(Icons.inventory, size: 18, color: Colors.grey[700]),
-                      SizedBox(width: 12),
-                      Text('Bulk Restock'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'export_excel',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.table_chart,
-                        size: 18,
-                        color: Colors.grey[700],
-                      ),
-                      SizedBox(width: 12),
-                      Text('Export Excel'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'export_csv',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.description,
-                        size: 18,
-                        color: Colors.grey[700],
-                      ),
-                      SizedBox(width: 12),
-                      Text('Export CSV'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
                   value: 'clear_filters',
                   child: Row(
                     children: [

@@ -1,10 +1,8 @@
 import 'dart:developer';
-
 import '../libs.dart';
-import '../services/home_service.dart';
 
 class HomeScreenController extends GetxController {
-  final HomeService _homeService = HomeService();
+  final HomeScreenService _homeService = HomeScreenService();
 
   // Store Info
   var storeName = 'Pawfect Store'.obs;
@@ -14,19 +12,21 @@ class HomeScreenController extends GetxController {
   // Loading State
   var isLoading = false.obs;
 
-  // Stats
-  var monthlySales = 0.0.obs;
-  var weeklySales = 0.0.obs;
-  var dailySales = 0.0.obs;
-  var totalOrders = 0.obs;
+  // Dashboard Stats - Initialize with 0 values
   var totalProducts = 0.obs;
   var outOfStockProducts = 0.obs;
+  var totalOrders = 0.obs;
+  var totalSales = 0.0.obs;
+  var dailySales = 0.0.obs;
+  var weeklySales = 0.0.obs;
+  var monthlySales = 0.0.obs;
 
   // Alerts
   var alerts = <AlertModel>[].obs;
 
   // Recent Orders
   var recentOrders = <OrderModel>[].obs;
+  var recentOrdersFromApi = <RecentOrderModel>[].obs;
 
   // Top Selling Products
   var topSellingProducts = <TopSellingProductModel>[].obs;
@@ -37,159 +37,117 @@ class HomeScreenController extends GetxController {
     loadDashboardData();
   }
 
-  // ========== Load Dashboard Data ==========
-
+  // ══════════════════════════════════════════════════════════════════════════
+  // LOAD DASHBOARD DATA
+  // ══════════════════════════════════════════════════════════════════════════
   Future<void> loadDashboardData() async {
     isLoading.value = true;
 
     try {
       await Future.wait([
-        fetchStoreInfo(),
-        fetchStats(),
-        fetchAlerts(),
+        fetchDashboardStats(),
         fetchRecentOrders(),
         fetchTopSellingProducts(),
+        fetchDummyData(), // Load other dummy data while backend is in development
       ]);
     } catch (e) {
-      log('Error loading dashboard data: $e');
-      Get.snackbar(
-        'Error',
-        'Failed to load dashboard data',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      log('❌ Error loading dashboard data: $e');
+      _showErrorSnackbar('Failed to load dashboard data');
     } finally {
       isLoading.value = false;
     }
   }
 
-  // ========== Refresh Data ==========
-
+  // ══════════════════════════════════════════════════════════════════════════
+  // REFRESH DATA
+  // ══════════════════════════════════════════════════════════════════════════
   Future<void> refreshData() async {
     await loadDashboardData();
   }
 
-  // ========== Fetch Store Info ==========
-
-  Future<void> fetchStoreInfo() async {
+  // ══════════════════════════════════════════════════════════════════════════
+  // FETCH DASHBOARD STATS FROM API
+  // ══════════════════════════════════════════════════════════════════════════
+  Future<void> fetchDashboardStats() async {
     try {
-      final response = await _homeService.getStoreInfo();
+      log('📊 Fetching dashboard stats from API...');
 
-      if (response.success && response.data != null) {
-        final store = response.data!;
-        storeName.value = store.name;
-        isStoreActive.value = store.isActive;
-        log('✅ Store info loaded: ${store.name}');
-      } else {
-        // Use dummy data on error
-        storeName.value = 'Pawfect Pet Store';
-        isStoreActive.value = true;
-        log('⚠️ Using dummy store data');
-      }
-
-      // Always set notification count (could be from a separate API)
-      notificationCount.value = 5;
-    } catch (e) {
-      log('❌ Error fetching store info: $e');
-      // Use default values
-      storeName.value = 'Pawfect Pet Store';
-      isStoreActive.value = true;
-    }
-  }
-
-  // ========== Fetch Stats ==========
-
-  Future<void> fetchStats() async {
-    try {
       final response = await _homeService.getDashboardStats();
 
       if (response.success && response.data != null) {
         final stats = response.data!;
-        monthlySales.value = stats.monthlySales;
-        weeklySales.value = stats.weeklySales;
-        dailySales.value = stats.dailySales;
-        totalOrders.value = stats.totalOrders;
+
+        // Update stats with API data
         totalProducts.value = stats.totalProducts;
         outOfStockProducts.value = stats.outOfStockProducts;
-        log('✅ Stats loaded successfully');
+        totalOrders.value = stats.totalOrders;
+        totalSales.value = stats.totalSales;
+        dailySales.value = stats.dailySales;
+        weeklySales.value = stats.weeklySales;
+        monthlySales.value = stats.monthlySales;
+
+        log('✅ Dashboard stats loaded successfully: $stats');
+
+        // Show success message if values are not all zero
+        if (stats.totalProducts > 0 ||
+            stats.totalOrders > 0 ||
+            stats.totalSales > 0) {
+          // _showSuccessSnackbar('Dashboard stats updated');
+        }
       } else {
-        // Use dummy data on error
-        _loadDummyStats();
-        log('⚠️ Using dummy stats data');
+        log('⚠️ Dashboard stats API failed: ${response.message}');
+        // Keep current values (which are 0 initially)
+        _showInfoSnackbar('Using default dashboard values');
       }
     } catch (e) {
-      log('❌ Error fetching stats: $e');
-      _loadDummyStats();
+      log('❌ Error fetching dashboard stats: $e');
+      // Keep current values (which are 0 initially)
+      _showInfoSnackbar('Dashboard stats will update when available');
     }
   }
 
-  void _loadDummyStats() {
-    monthlySales.value = 45680.0;
-    weeklySales.value = 12450.0;
-    dailySales.value = 2340.0;
-    totalOrders.value = 234;
-    totalProducts.value = 48;
-    outOfStockProducts.value = 5;
-  }
-
-  // ========== Fetch Alerts ==========
-
-  Future<void> fetchAlerts() async {
-    try {
-      final response = await _homeService.getAlerts();
-
-      if (response.success && response.data != null) {
-        alerts.value = response.data!;
-        log('✅ Alerts loaded: ${alerts.length} alerts');
-      } else {
-        // Use dummy data on error
-        _loadDummyAlerts();
-        log('⚠️ Using dummy alerts data');
-      }
-    } catch (e) {
-      log('❌ Error fetching alerts: $e');
-      _loadDummyAlerts();
-    }
-  }
-
-  void _loadDummyAlerts() {
-    alerts.value = [
-      AlertModel(
-        type: AlertType.lowStock,
-        title: 'Low Stock Alert',
-        message: '5 products are running low on stock',
-        count: 5,
-      ),
-      AlertModel(
-        type: AlertType.newOrder,
-        title: 'New Orders',
-        message: '2 new orders received',
-        count: 2,
-      ),
-    ];
-  }
-
-  // ========== Fetch Recent Orders ==========
-
+  // ══════════════════════════════════════════════════════════════════════════
+  // FETCH RECENT ORDERS FROM API
+  // ══════════════════════════════════════════════════════════════════════════
   Future<void> fetchRecentOrders() async {
     try {
+      log('📦 Fetching recent orders from API...');
+
       final response = await _homeService.getRecentOrders(limit: 5);
 
       if (response.success && response.data != null) {
-        recentOrders.value = response.data!;
-        log('✅ Recent orders loaded: ${recentOrders.length} orders');
+        final apiOrders = response.data!;
+
+        // Store API orders
+        recentOrdersFromApi.value = apiOrders;
+
+        // Convert to OrderModel for existing UI compatibility
+        recentOrders.value =
+            apiOrders.map((order) => order.toOrderModel()).toList();
+
+        log('✅ Recent orders loaded successfully: ${apiOrders.length} orders');
+
+        // Show success message if we have orders
+        if (apiOrders.isNotEmpty) {
+          // _showSuccessSnackbar('Recent orders updated');
+        }
       } else {
-        // Use dummy data on error
+        log('⚠️ Recent orders API failed: ${response.message}');
+        // Keep current values or load dummy data
         _loadDummyOrders();
-        log('⚠️ Using dummy orders data');
+        _showInfoSnackbar('Using sample order data');
       }
     } catch (e) {
       log('❌ Error fetching recent orders: $e');
+      // Keep current values or load dummy data
       _loadDummyOrders();
+      _showInfoSnackbar('Recent orders will update when available');
     }
   }
 
+  // ══════════════════════════════════════════════════════════════════════════
+  // LOAD DUMMY ORDERS (Fallback)
+  // ══════════════════════════════════════════════════════════════════════════
   void _loadDummyOrders() {
     recentOrders.value = [
       OrderModel(
@@ -213,76 +171,116 @@ class HomeScreenController extends GetxController {
         status: 'Delivered',
         date: DateTime.now().subtract(Duration(hours: 5)),
       ),
-      OrderModel(
-        id: '1237',
-        customerName: 'Sarah Wilson',
-        amount: 670.0,
-        status: 'Pending',
-        date: DateTime.now().subtract(Duration(hours: 8)),
-      ),
-      OrderModel(
-        id: '1238',
-        customerName: 'Tom Brown',
-        amount: 1540.0,
-        status: 'Processing',
-        date: DateTime.now().subtract(Duration(days: 1)),
-      ),
     ];
   }
 
-  // ========== Fetch Top Selling Products ==========
-
+  // ══════════════════════════════════════════════════════════════════════════
+  // FETCH TOP SELLING PRODUCTS FROM API
+  // ══════════════════════════════════════════════════════════════════════════
   Future<void> fetchTopSellingProducts() async {
     try {
-      final response = await _homeService.getTopSellingProducts(
-        limit: 3,
-        period: 'month',
-      );
+      log('🏆 Fetching top selling products from API...');
+
+      final response = await _homeService.getTopSellingProducts(limit: 3);
 
       if (response.success && response.data != null) {
-        topSellingProducts.value = response.data!;
+        final products = response.data!;
+
+        // Update top selling products with API data
+        topSellingProducts.value = products;
+
         log(
-          '✅ Top selling products loaded: ${topSellingProducts.length} products',
+          '✅ Top selling products loaded successfully: ${products.length} products',
         );
+
+        // Show success message if we have products
+        if (products.isNotEmpty) {
+          // _showSuccessSnackbar('Top selling products updated');
+        }
       } else {
-        // Use dummy data on error
+        log('⚠️ Top selling products API failed: ${response.message}');
+        // Keep current values or load dummy data
         _loadDummyProducts();
-        log('⚠️ Using dummy products data');
+        _showInfoSnackbar('Using sample product data');
       }
     } catch (e) {
       log('❌ Error fetching top selling products: $e');
+      // Keep current values or load dummy data
       _loadDummyProducts();
+      _showInfoSnackbar('Top selling products will update when available');
     }
   }
 
+  // ══════════════════════════════════════════════════════════════════════════
+  // LOAD DUMMY PRODUCTS (Fallback)
+  // ══════════════════════════════════════════════════════════════════════════
   void _loadDummyProducts() {
     topSellingProducts.value = [
       TopSellingProductModel(
         id: 'p1',
         name: 'Premium Dog Food 5kg',
-        imageUrl: '', // Using empty string to avoid invalid URI
+        images: [], // Using empty list to avoid invalid URI
         price: 1299.0,
-        soldCount: 145,
+        totalSold: 145,
+        totalRevenue: 188355.0,
+        category: 'Dog',
       ),
       TopSellingProductModel(
         id: 'p2',
         name: 'Cat Food Premium',
-        imageUrl: '', // Using empty string to avoid invalid URI
+        images: [], // Using empty list to avoid invalid URI
         price: 899.0,
-        soldCount: 132,
+        totalSold: 132,
+        totalRevenue: 118668.0,
+        category: 'Cat',
       ),
       TopSellingProductModel(
         id: 'p3',
         name: 'Dog Treats Pack',
-        imageUrl: '', // Using empty string to avoid invalid URI
+        images: [], // Using empty list to avoid invalid URI
         price: 349.0,
-        soldCount: 98,
+        totalSold: 98,
+        totalRevenue: 34202.0,
+        category: 'Dog',
       ),
     ];
   }
 
-  // ========== Toggle Store Status ==========
+  // ══════════════════════════════════════════════════════════════════════════
+  // FETCH DUMMY DATA (While backend is in development)
+  // ══════════════════════════════════════════════════════════════════════════
+  Future<void> fetchDummyData() async {
+    try {
+      // Store info
+      storeName.value = 'Pawfect Pet Store';
+      isStoreActive.value = true;
+      notificationCount.value = 5;
 
+      // Dummy alerts
+      alerts.value = [
+        AlertModel(
+          type: AlertType.lowStock,
+          title: 'Low Stock Alert',
+          message: 'Some products are running low on stock',
+          count: outOfStockProducts.value,
+        ),
+        AlertModel(
+          type: AlertType.newOrder,
+          title: 'New Orders',
+          message: 'You have new orders to process',
+          count: 2,
+        ),
+      ];
+
+      log('✅ Dummy data loaded successfully');
+    } catch (e) {
+      log('❌ Error loading dummy data: $e');
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // TOGGLE STORE STATUS
+  // ══════════════════════════════════════════════════════════════════════════
   Future<void> toggleStoreStatus() async {
     final newStatus = !isStoreActive.value;
 
@@ -290,44 +288,22 @@ class HomeScreenController extends GetxController {
       // Optimistically update UI
       isStoreActive.value = newStatus;
 
-      final response = await _homeService.updateStoreStatus(newStatus);
+      // TODO: Implement store status API when backend is ready
+      // For now, just show success message
+      _showSuccessSnackbar('Store is now ${newStatus ? "Active" : "Inactive"}');
 
-      if (response.success) {
-        Get.snackbar(
-          'Store Status',
-          'Store is now ${newStatus ? "Active" : "Inactive"}',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: newStatus ? Colors.green : Colors.orange,
-          colorText: Colors.white,
-          duration: Duration(seconds: 2),
-        );
-      } else {
-        // Revert on failure
-        isStoreActive.value = !newStatus;
-        Get.snackbar(
-          'Error',
-          response.message ?? 'Failed to update store status',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
-      }
+      log('✅ Store status toggled to: ${newStatus ? "Active" : "Inactive"}');
     } catch (e) {
       // Revert on error
       isStoreActive.value = !newStatus;
       log('❌ Error toggling store status: $e');
-      Get.snackbar(
-        'Error',
-        'Failed to update store status',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      _showErrorSnackbar('Failed to update store status');
     }
   }
 
-  // ========== Navigation Methods ==========
-
+  // ══════════════════════════════════════════════════════════════════════════
+  // NAVIGATION METHODS
+  // ══════════════════════════════════════════════════════════════════════════
   void openNotifications() {
     Get.toNamed(AppRoutes.notifications);
   }
@@ -359,13 +335,48 @@ class HomeScreenController extends GetxController {
   }
 
   void navigateToProductDetails(TopSellingProductModel product) {
-    // If you have product details route
     Get.snackbar(
       'Product Details',
       '${product.name} - Coming soon!',
       snackPosition: SnackPosition.BOTTOM,
       backgroundColor: Colors.blue,
       colorText: Colors.white,
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SNACKBAR HELPERS
+  // ══════════════════════════════════════════════════════════════════════════
+  void _showSuccessSnackbar(String message) {
+    Get.snackbar(
+      'Success',
+      message,
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.green,
+      colorText: Colors.white,
+      duration: Duration(seconds: 2),
+    );
+  }
+
+  void _showErrorSnackbar(String message) {
+    Get.snackbar(
+      'Error',
+      message,
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+      duration: Duration(seconds: 3),
+    );
+  }
+
+  void _showInfoSnackbar(String message) {
+    Get.snackbar(
+      'Info',
+      message,
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.blue,
+      colorText: Colors.white,
+      duration: Duration(seconds: 2),
     );
   }
 }

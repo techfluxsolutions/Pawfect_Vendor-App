@@ -41,6 +41,8 @@ export 'package:pawfect_vendor_app/models/auth_response_model.dart';
 export '../services/onboarding_service.dart';
 export 'package:pawfect_vendor_app/services/kyc_status_service.dart';
 export 'package:pawfect_vendor_app/models/home_screen_model.dart';
+export 'package:pawfect_vendor_app/services/home_service.dart';
+export 'package:pawfect_vendor_app/services/orders_service.dart';
 export 'package:pawfect_vendor_app/services/product_service.dart';
 export 'package:pawfect_vendor_app/views/earnings_payments_screens/earnings_screen.dart';
 export 'package:pawfect_vendor_app/views/earnings_payments_screens/bank_details_screen.dart';
@@ -55,3 +57,6 @@ export 'package:pawfect_vendor_app/views/analytics_screen/analytics_screen.dart'
 export 'package:pawfect_vendor_app/views/reports_screen/reports_screen.dart';
 export 'package:pawfect_vendor_app/controllers/order_controller.dart';
 export 'package:pawfect_vendor_app/models/order_model.dart';
+export 'package:pawfect_vendor_app/views/inventory_screen/inventory_screen.dart';
+export 'package:pawfect_vendor_app/models/analytics_model.dart';
+export 'package:pawfect_vendor_app/services/analytics_service.dart';

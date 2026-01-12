@@ -93,10 +93,10 @@ class ProfileScreen extends StatelessWidget {
                   color: Colors.black,
                 ),
               ),
-              IconButton(
-                onPressed: controller.editProfile,
-                icon: Icon(Icons.edit, color: Colors.black),
-              ),
+              // IconButton(
+              //   onPressed: controller.editProfile,
+              //   icon: Icon(Icons.edit, color: Colors.black),
+              // ),
             ],
           ),
           SizedBox(height: 20),
@@ -138,16 +138,17 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
           SizedBox(height: 8),
-          // Store Status
+          // Store Status Toggle
           Obx(
             () => Container(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color:
-                    controller.isStoreActive.value
-                        ? Colors.green[100]
-                        : Colors.red[100],
-                borderRadius: BorderRadius.circular(20),
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(25),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.3),
+                  width: 1,
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -163,16 +164,89 @@ class ProfileScreen extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                   ),
-                  SizedBox(width: 6),
+                  SizedBox(width: 8),
                   Text(
                     controller.isStoreActive.value ? 'Active' : 'Inactive',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color:
-                          controller.isStoreActive.value
-                              ? Colors.green[800]
-                              : Colors.red[800],
+                      color: Colors.black87,
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  // Toggle Switch
+                  GestureDetector(
+                    onTap:
+                        controller.isLoading.value
+                            ? null
+                            : controller.toggleStoreStatus,
+                    child: AnimatedContainer(
+                      duration: Duration(milliseconds: 200),
+                      width: 50,
+                      height: 26,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(13),
+                        color:
+                            controller.isStoreActive.value
+                                ? Colors.green
+                                : Colors.grey[400],
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Stack(
+                        children: [
+                          AnimatedPositioned(
+                            duration: Duration(milliseconds: 200),
+                            curve: Curves.easeInOut,
+                            left: controller.isStoreActive.value ? 26 : 2,
+                            top: 2,
+                            child: Container(
+                              width: 22,
+                              height: 22,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(11),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.2),
+                                    blurRadius: 3,
+                                    offset: Offset(0, 1),
+                                  ),
+                                ],
+                              ),
+                              child:
+                                  controller.isLoading.value
+                                      ? Padding(
+                                        padding: EdgeInsets.all(4),
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                controller.isStoreActive.value
+                                                    ? Colors.green
+                                                    : Colors.grey[600]!,
+                                              ),
+                                        ),
+                                      )
+                                      : Icon(
+                                        controller.isStoreActive.value
+                                            ? Icons.check
+                                            : Icons.close,
+                                        size: 14,
+                                        color:
+                                            controller.isStoreActive.value
+                                                ? Colors.green
+                                                : Colors.grey[600],
+                                      ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -320,7 +394,7 @@ class ProfileScreen extends StatelessWidget {
         Container(
           padding: EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: primaryColor.withOpacity(0.1),
+            color: primaryColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: primaryColor, size: 20),
@@ -596,7 +670,7 @@ class ProfileScreen extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: primaryColor.withOpacity(0.1),
+                color: primaryColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, color: primaryColor, size: 20),
