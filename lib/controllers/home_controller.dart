@@ -1,5 +1,4 @@
-import 'package:get/get.dart';
-import '../../services/kyc_status_service.dart';
+import '../libs.dart';
 
 class HomeController extends GetxController {
   var currentIndex = 0.obs;

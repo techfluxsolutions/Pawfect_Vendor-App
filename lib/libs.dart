@@ -60,3 +60,6 @@ export 'package:pawfect_vendor_app/models/order_model.dart';
 export 'package:pawfect_vendor_app/views/inventory_screen/inventory_screen.dart';
 export 'package:pawfect_vendor_app/models/analytics_model.dart';
 export 'package:pawfect_vendor_app/services/analytics_service.dart';
+export 'package:pawfect_vendor_app/models/onboarding_model.dart';
+export 'package:pawfect_vendor_app/widgets/highlighted_text_field.dart';
+export 'package:pawfect_vendor_app/widgets/rejection_banner.dart';

@@ -6,7 +6,13 @@ class AppPages {
     GetPage(name: AppRoutes.login, page: () => LoginScreen()),
     GetPage(name: AppRoutes.otp, page: () => OtpScreen()),
     GetPage(name: AppRoutes.homeScreen, page: () => HomeScreen()),
-    GetPage(name: AppRoutes.onboardingScreen, page: () => OnboardingScreen()),
+    GetPage(
+      name: AppRoutes.onboardingScreen,
+      page: () => OnboardingScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<OnboardingController>(() => OnboardingController());
+      }),
+    ),
     GetPage(
       name: AppRoutes.onboardingWaitingScreen,
       page: () => OnboardingWaitingScreen(),

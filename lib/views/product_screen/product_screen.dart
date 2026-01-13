@@ -339,7 +339,7 @@ class ProductScreen extends StatelessWidget {
               // Image Skeleton
               Container(
                 width: 100,
-                height: 120,
+                height: 140, // ✅ Match the new image height
                 decoration: BoxDecoration(
                   color: Colors.grey[200],
                   borderRadius: BorderRadius.only(
@@ -467,7 +467,7 @@ class ProductScreen extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Left Side - Image0
+            // Left Side - Image
             _buildProductImage(product, primaryColor),
 
             // Right Side - Details
@@ -556,7 +556,7 @@ class ProductScreen extends StatelessWidget {
   Widget _buildProductImage(ProductModel product, Color primaryColor) {
     return Container(
       width: 100,
-      height: 120,
+      height: 140, // ✅ Increased height from 120 to 140 for better visual
       child: Stack(
         children: [
           // Image
@@ -567,15 +567,16 @@ class ProductScreen extends StatelessWidget {
             ),
             child: Container(
               width: 100,
-              height: 120,
+              height: 140,
               color: Colors.grey[200],
               child:
                   product.images.isNotEmpty
                       ? Image.network(
-                        'https://api-dev.pawfectcaring.com${product.images[0]}', // ✅ Add your base URL
+                        product
+                            .images[0], // ✅ Use the full URL directly from API
                         fit: BoxFit.cover,
                         width: 100,
-                        height: 120,
+                        height: 140,
                         errorBuilder: (context, error, stackTrace) {
                           return Icon(
                             Icons.image,

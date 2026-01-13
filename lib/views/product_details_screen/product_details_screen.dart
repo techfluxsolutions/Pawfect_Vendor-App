@@ -151,7 +151,7 @@ class ProductDetailsScreen extends StatelessWidget {
           // Image
           product.images.isNotEmpty
               ? Image.network(
-                'https://api-dev.pawfectcaring.com${product.images[0]}',
+                product.images[0], // ✅ Use the full URL directly from API
                 fit: BoxFit.cover,
                 width: double.infinity,
                 height: 300,

@@ -8,7 +8,6 @@ class KycStatusService {
   KycStatusService._internal();
 
   final ApiClient _apiClient = ApiClient();
-  final StorageService _storage = StorageService.instance;
 
   Timer? _pollingTimer;
   String _lastKycStatus = ''; // Track previous status
@@ -140,11 +139,9 @@ class KycStatusService {
         actions: [
           ElevatedButton(
             onPressed: () async {
-              // Clear form and go back to onboarding
-              final onboardingController = Get.find<OnboardingController>();
-              onboardingController.clearForm();
+              Get.back(); // Close dialog first
 
-              Get.back(); // Close dialog
+              // Navigate to onboarding screen - the controller will be created there
               Get.offNamed(AppRoutes.onboardingScreen);
             },
             style: ElevatedButton.styleFrom(

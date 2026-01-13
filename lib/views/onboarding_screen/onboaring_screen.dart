@@ -6,7 +6,8 @@
 import '../../libs.dart';
 
 class OnboardingScreen extends StatelessWidget {
-  final OnboardingController controller = Get.put(OnboardingController());
+  // Use Get.find() since controller is now bound via route binding
+  OnboardingController get controller => Get.find<OnboardingController>();
 
   void _showFilePickerDialog(BuildContext context, String type) {
     showDialog(
