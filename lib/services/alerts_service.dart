@@ -1,10 +1,5 @@
 import 'dart:developer';
 import '../libs.dart';
-import '../core/network/api_client.dart';
-import '../core/network/api_response.dart';
-import '../models/home_screen_model.dart';
-import '../core/api/api_urls.dart';
-import '../routes/app_routes.dart';
 
 class AlertsService {
   final ApiClient _apiClient = ApiClient();

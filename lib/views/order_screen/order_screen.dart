@@ -722,62 +722,225 @@ class OrderScreen extends StatelessWidget {
   void _showStatusUpdateDialog(VendorOrderModel order, Color primaryColor) {
     Get.bottomSheet(
       Container(
+        height: MediaQuery.of(Get.context!).size.height * 0.75,
         padding: EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Update Order Status',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16),
-            Text(
-              'Order ${order.id}',
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-            ),
-            SizedBox(height: 16),
-            // Wrap status options in a flexible scrollable container
-            Flexible(
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children:
-                      controller.statusOptions
-                          .where((status) => status['value'] != 'all')
-                          .map(
-                            (status) => ListTile(
-                              leading: Icon(
-                                controller.getStatusIcon(status['value']!),
-                                color: controller.getStatusColor(
-                                  status['value']!,
-                                ),
-                              ),
-                              title: Text(status['label']!),
-                              onTap: () {
-                                Get.back();
-                                controller.updateOrderStatus(
-                                  order,
-                                  status['value']!,
-                                );
-                              },
-                            ),
-                          )
-                          .toList(),
+            // Handle
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
-            SizedBox(height: 10),
-            TextButton(
-              onPressed: () => Get.back(),
-              child: Center(child: Text('Cancel')),
+            SizedBox(height: 16),
+
+            // Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Update Order Status',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Order ${order.id}',
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.close),
+                  onPressed: () => Get.back(),
+                ),
+              ],
+            ),
+
+            SizedBox(height: 20),
+
+            // Current Status Badge
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: controller
+                    .getStatusColor(order.status)
+                    .withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    controller.getStatusIcon(order.status),
+                    size: 18,
+                    color: controller.getStatusColor(order.status),
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    'Current: ${order.status.toUpperCase()}',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: controller.getStatusColor(order.status),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            SizedBox(height: 20),
+
+            // Status Options Title
+            Text(
+              'Select New Status',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[700],
+              ),
+            ),
+            SizedBox(height: 12),
+
+            // Status Options List
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    _buildStatusOption(
+                      'Processing',
+                      'Order is being prepared',
+                      Icons.settings,
+                      Colors.blue,
+                      order,
+                    ),
+                    _buildStatusOption(
+                      'Shipped',
+                      'Order has been shipped',
+                      Icons.local_shipping,
+                      Colors.teal,
+                      order,
+                    ),
+                    _buildStatusOption(
+                      'Out for Delivery',
+                      'Order is out for delivery',
+                      Icons.delivery_dining,
+                      Colors.orange,
+                      order,
+                    ),
+                    _buildStatusOption(
+                      'Delivered',
+                      'Order has been delivered',
+                      Icons.done_all,
+                      Colors.green,
+                      order,
+                    ),
+                    Divider(height: 32),
+                    _buildStatusOption(
+                      'Cancelled',
+                      'Order has been cancelled',
+                      Icons.cancel,
+                      Colors.red,
+                      order,
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
+      ),
+      isScrollControlled: true,
+    );
+  }
+
+  Widget _buildStatusOption(
+    String status,
+    String description,
+    IconData icon,
+    Color color,
+    VendorOrderModel order,
+  ) {
+    final isCurrentStatus = order.status.toLowerCase() == status.toLowerCase();
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: isCurrentStatus ? color.withValues(alpha: 0.05) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isCurrentStatus ? color : Colors.grey[300]!,
+          width: isCurrentStatus ? 2 : 1,
+        ),
+      ),
+      child: ListTile(
+        enabled: !isCurrentStatus,
+        leading: Container(
+          padding: EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: color, size: 24),
+        ),
+        title: Text(
+          status,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: isCurrentStatus ? color : Colors.grey[800],
+          ),
+        ),
+        subtitle: Text(
+          description,
+          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+        ),
+        trailing:
+            isCurrentStatus
+                ? Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    'CURRENT',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                )
+                : Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: Colors.grey[400],
+                ),
+        onTap:
+            isCurrentStatus
+                ? null
+                : () {
+                  Get.back();
+                  controller.updateOrderStatus(order, status);
+                },
       ),
     );
   }

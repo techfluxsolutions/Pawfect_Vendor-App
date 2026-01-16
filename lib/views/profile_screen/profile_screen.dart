@@ -319,63 +319,88 @@ class ProfileScreen extends StatelessWidget {
           ),
           Divider(height: 24),
           // Rating & Reviews
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Store Rating',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                    ),
-                    SizedBox(height: 4),
-                    Obx(
-                      () => Row(
+          Obx(() {
+            // ✅ Show loading indicator while fetching reviews
+            if (controller.isLoadingReviews.value) {
+              return Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: primaryColor,
+                  ),
+                ),
+              );
+            }
+
+            // ✅ Show ratings (including 0 values)
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Store Rating',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      ),
+                      SizedBox(height: 4),
+                      Row(
                         children: [
-                          Icon(Icons.star, color: Colors.amber, size: 20),
+                          Icon(
+                            Icons.star,
+                            color:
+                                controller.storeRating.value > 0
+                                    ? Colors.amber
+                                    : Colors.grey[400],
+                            size: 20,
+                          ),
                           SizedBox(width: 4),
                           Text(
-                            controller.storeRating.value.toString(),
+                            controller.storeRating.value.toStringAsFixed(1),
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Colors.grey[800],
+                              color:
+                                  controller.storeRating.value > 0
+                                      ? Colors.grey[800]
+                                      : Colors.grey[500],
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              Container(width: 1, height: 40, color: Colors.grey[300]),
-              SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Total Reviews',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                    ),
-                    SizedBox(height: 4),
-                    Obx(
-                      () => Text(
+                Container(width: 1, height: 40, color: Colors.grey[300]),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Total Reviews',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
                         controller.totalReviews.value.toString(),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.grey[800],
+                          color:
+                              controller.totalReviews.value > 0
+                                  ? Colors.grey[800]
+                                  : Colors.grey[500],
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            );
+          }),
         ],
       ),
     );

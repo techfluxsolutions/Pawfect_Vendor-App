@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import '../libs.dart';
 
 class KycStatusService {
@@ -140,6 +142,7 @@ class KycStatusService {
           ElevatedButton(
             onPressed: () async {
               Get.back(); // Close dialog first
+              log("Button Pressed: Resubmit KYC");
 
               // Navigate to onboarding screen - the controller will be created there
               Get.offNamed(AppRoutes.onboardingScreen);

@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import '../../libs.dart';
 import '../../controllers/order_controller.dart';
 import '../../models/order_model.dart';
@@ -13,6 +15,7 @@ class OrderDetailsScreen extends StatelessWidget {
     // Handle both VendorOrderModel and ExtendedOrderModel
     final arguments = Get.arguments;
     VendorOrderModel order;
+    log('Arguments: ${arguments.toJson()}');
 
     if (arguments is VendorOrderModel) {
       order = arguments;
@@ -69,70 +72,6 @@ class OrderDetailsScreen extends StatelessWidget {
       backgroundColor: primaryColor,
       foregroundColor: Colors.black,
       elevation: 0,
-      actions: [
-        PopupMenuButton<String>(
-          icon: Icon(Icons.more_vert, color: Colors.black),
-          onSelected: (value) {
-            switch (value) {
-              case 'call_customer':
-                _callCustomer(order.customerPhone);
-                break;
-              case 'message_customer':
-                _messageCustomer(order.customerPhone);
-                break;
-              case 'print_invoice':
-                _printInvoice(order);
-                break;
-              case 'share_tracking':
-                _shareTracking(order);
-                break;
-            }
-          },
-          itemBuilder:
-              (context) => [
-                PopupMenuItem(
-                  value: 'call_customer',
-                  child: Row(
-                    children: [
-                      Icon(Icons.phone, size: 18, color: Colors.grey[700]),
-                      SizedBox(width: 12),
-                      Text('Call Customer'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'message_customer',
-                  child: Row(
-                    children: [
-                      Icon(Icons.message, size: 18, color: Colors.grey[700]),
-                      SizedBox(width: 12),
-                      Text('Message Customer'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'print_invoice',
-                  child: Row(
-                    children: [
-                      Icon(Icons.print, size: 18, color: Colors.grey[700]),
-                      SizedBox(width: 12),
-                      Text('Print Invoice'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'share_tracking',
-                  child: Row(
-                    children: [
-                      Icon(Icons.share, size: 18, color: Colors.grey[700]),
-                      SizedBox(width: 12),
-                      Text('Share Tracking'),
-                    ],
-                  ),
-                ),
-              ],
-        ),
-      ],
     );
   }
 

@@ -67,3 +67,6 @@ export 'package:pawfect_vendor_app/views/legal/terms_conditions_screen.dart';
 export 'package:pawfect_vendor_app/views/legal/privacy_policy_screen.dart';
 export 'package:pawfect_vendor_app/controllers/legal_controller.dart';
 export 'package:pawfect_vendor_app/services/profile_service.dart';
+export 'package:pawfect_vendor_app/views/faq_screen/faq_screen.dart';
+export 'package:pawfect_vendor_app/controllers/faq_controller.dart';
+export 'package:pawfect_vendor_app/models/faq_model.dart';

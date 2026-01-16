@@ -19,16 +19,18 @@ class ProfileController extends GetxController {
   var isMobileVerified = true.obs;
 
   // Store Ratings
-  var storeRating = 4.5.obs;
-  var totalReviews = 128.obs;
+  var storeRating = 0.0.obs; // ✅ Default to 0.0
+  var totalReviews = 0.obs; // ✅ Default to 0
 
   // Loading State
   var isLoading = false.obs;
+  var isLoadingReviews = false.obs; // ✅ Separate loading for reviews
 
   @override
   void onInit() {
     super.onInit();
     loadProfileData();
+    loadReviewStats(); // ✅ Load review stats
   }
 
   // ========== Load Profile Data ==========
@@ -87,8 +89,54 @@ class ProfileController extends GetxController {
     mobileNumber.value = '+91 9876543210';
     isEmailVerified.value = true;
     isMobileVerified.value = true;
-    storeRating.value = 4.5;
-    totalReviews.value = 128;
+    // Don't set dummy ratings - keep them at 0
+  }
+
+  // ========== Load Review Stats ==========
+
+  Future<void> loadReviewStats() async {
+    isLoadingReviews.value = true;
+
+    try {
+      log('📊 Loading review stats...');
+
+      final response = await _profileService.getReviewStats();
+
+      if (response.success && response.data != null) {
+        final data = response.data;
+
+        // ✅ Update review stats from API
+        totalReviews.value = data['totalReviews'] ?? 0;
+
+        // ✅ Handle averageRating - can be int or double
+        final rating = data['averageRating'];
+
+        log("reviews and rating $totalReviews $rating");
+        if (rating != null) {
+          storeRating.value =
+              (rating is int) ? rating.toDouble() : rating.toDouble();
+        } else {
+          storeRating.value = 0.0;
+        }
+
+        log(
+          '✅ Review stats loaded: ${totalReviews.value} reviews, ${storeRating.value} rating',
+        );
+      } else {
+        // ✅ If API fails, use 0 values
+        log('⚠️ Review stats API failed, using 0 values: ${response.message}');
+        storeRating.value = 0.0;
+        totalReviews.value = 0;
+      }
+    } catch (e) {
+      log('❌ Error loading review stats: $e');
+
+      // ✅ On error, use 0 values (don't show error to user)
+      storeRating.value = 0.0;
+      totalReviews.value = 0;
+    } finally {
+      isLoadingReviews.value = false;
+    }
   }
 
   // ========== Store Status Toggle ==========
@@ -234,14 +282,8 @@ class ProfileController extends GetxController {
   // ========== Legal & Documents Navigation ==========
 
   void navigateToKYC() {
-    Get.snackbar(
-      'KYC Documents',
-      'View and upload KYC documents',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.blue,
-      colorText: Colors.white,
-      duration: Duration(seconds: 2),
-    );
+    // Navigate to onboarding screen in edit mode (no rejection reason)
+    Get.toNamed(AppRoutes.onboardingScreen);
   }
 
   void navigateToBusinessDocuments() {
@@ -331,14 +373,7 @@ class ProfileController extends GetxController {
   }
 
   void navigateToFAQ() {
-    Get.snackbar(
-      'Help & FAQ',
-      'View frequently asked questions',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.blue,
-      colorText: Colors.white,
-      duration: Duration(seconds: 2),
-    );
+    Get.toNamed(AppRoutes.faq);
   }
 
   void navigateToTerms() {

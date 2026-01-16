@@ -37,8 +37,8 @@ class OrderController extends GetxController {
     {'value': 'all', 'label': 'All Orders'},
     {'value': 'Pending', 'label': 'Pending'},
     {'value': 'Processing', 'label': 'Processing'},
-    {'value': 'Completed', 'label': 'Completed'},
     {'value': 'Shipped', 'label': 'Shipped'},
+    {'value': 'Out for Delivery', 'label': 'Out for Delivery'},
     {'value': 'Delivered', 'label': 'Delivered'},
     {'value': 'Cancelled', 'label': 'Cancelled'},
   ];
@@ -340,6 +340,8 @@ class OrderController extends GetxController {
         return Colors.purple;
       case 'shipped':
         return Colors.teal;
+      case 'out for delivery':
+        return Colors.orange;
       case 'delivered':
       case 'completed':
         return Colors.green;
@@ -364,6 +366,8 @@ class OrderController extends GetxController {
         return Icons.inventory_2;
       case 'shipped':
         return Icons.local_shipping;
+      case 'out for delivery':
+        return Icons.delivery_dining;
       case 'delivered':
       case 'completed':
         return Icons.done_all;
@@ -622,6 +626,49 @@ class VendorOrderModel {
 
   String get formattedTotalAmount => '₹${totalAmount.toStringAsFixed(2)}';
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'customerName': customerName,
+      'customerPhone': customerPhone,
+      'customerEmail': customerEmail,
+      'customerAddress': customerAddress,
+      'orderDate': orderDate.toIso8601String(),
+      'status': status,
+      'paymentMethod': paymentMethod,
+      'paymentStatus': paymentStatus,
+      'totalAmount': totalAmount,
+      'deliveryFee': deliveryFee,
+      'discount': discount,
+      'items': items.map((item) => item.toJson()).toList(),
+    };
+  }
+
+  factory VendorOrderModel.fromJson(Map<String, dynamic> json) {
+    return VendorOrderModel(
+      id: json['id'] ?? '',
+      customerName: json['customerName'] ?? '',
+      customerPhone: json['customerPhone'] ?? '',
+      customerEmail: json['customerEmail'] ?? '',
+      customerAddress: json['customerAddress'] ?? '',
+      orderDate:
+          json['orderDate'] != null
+              ? DateTime.parse(json['orderDate'])
+              : DateTime.now(),
+      status: json['status'] ?? '',
+      paymentMethod: json['paymentMethod'] ?? '',
+      paymentStatus: json['paymentStatus'] ?? '',
+      totalAmount: (json['totalAmount'] ?? 0).toDouble(),
+      deliveryFee: (json['deliveryFee'] ?? 0).toDouble(),
+      discount: (json['discount'] ?? 0).toDouble(),
+      items:
+          (json['items'] as List<dynamic>?)
+              ?.map((item) => OrderItemModel.fromJson(item))
+              .toList() ??
+          [],
+    );
+  }
+
   VendorOrderModel copyWith({
     String? id,
     String? customerName,
@@ -673,4 +720,24 @@ class OrderItemModel {
   double get totalPrice => price * quantity;
   String get formattedPrice => '₹${price.toStringAsFixed(2)}';
   String get formattedTotalPrice => '₹${totalPrice.toStringAsFixed(2)}';
+
+  Map<String, dynamic> toJson() {
+    return {
+      'productId': productId,
+      'productName': productName,
+      'quantity': quantity,
+      'price': price,
+      'imageUrl': imageUrl,
+    };
+  }
+
+  factory OrderItemModel.fromJson(Map<String, dynamic> json) {
+    return OrderItemModel(
+      productId: json['productId'] ?? '',
+      productName: json['productName'] ?? '',
+      quantity: json['quantity'] ?? 0,
+      price: (json['price'] ?? 0).toDouble(),
+      imageUrl: json['imageUrl'] ?? '',
+    );
+  }
 }

@@ -9,7 +9,9 @@ class ProfileService {
   // ══════════════════════════════════════════════════════════════════════════
   Future<ApiResponse> getTermsAndConditions() async {
     try {
-      final response = await _apiClient.get('/user/terms');
+      final response = await _apiClient.get(
+        '/terms',
+      ); // ✅ Fixed: Remove /user prefix
       return response;
     } catch (e) {
       return ApiResponse.error(message: e.toString());
@@ -21,7 +23,9 @@ class ProfileService {
   // ══════════════════════════════════════════════════════════════════════════
   Future<ApiResponse> getPrivacyPolicy() async {
     try {
-      final response = await _apiClient.get('/user/privacy-policy');
+      final response = await _apiClient.get(
+        '/privacy-policy',
+      ); // ✅ Fixed: Remove /user prefix
       return response;
     } catch (e) {
       return ApiResponse.error(message: e.toString());
@@ -33,7 +37,7 @@ class ProfileService {
   // ══════════════════════════════════════════════════════════════════════════
   Future<ApiResponse> getProfileData() async {
     try {
-      final response = await _apiClient.get('/user/profile');
+      final response = await _apiClient.get('/profile');
       return response;
     } catch (e) {
       return ApiResponse.error(message: e.toString());
@@ -49,6 +53,30 @@ class ProfileService {
         '/user/store-status',
         data: {'isActive': isActive},
       );
+      return response;
+    } catch (e) {
+      return ApiResponse.error(message: e.toString());
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // GET REVIEW STATS
+  // ══════════════════════════════════════════════════════════════════════════
+  Future<ApiResponse> getReviewStats() async {
+    try {
+      final response = await _apiClient.get('/review-stats');
+      return response;
+    } catch (e) {
+      return ApiResponse.error(message: e.toString());
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // GET HELP & FAQ
+  // ══════════════════════════════════════════════════════════════════════════
+  Future<ApiResponse> getHelpFAQ() async {
+    try {
+      final response = await _apiClient.get('/help-faq');
       return response;
     } catch (e) {
       return ApiResponse.error(message: e.toString());

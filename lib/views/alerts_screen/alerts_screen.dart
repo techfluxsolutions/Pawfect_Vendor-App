@@ -171,15 +171,6 @@ class AlertsScreen extends StatelessWidget {
               Colors.red,
             ),
           ),
-          SizedBox(width: 12),
-          Expanded(
-            child: _buildSummaryCard(
-              'Resolved Today',
-              controller.resolvedToday,
-              Icons.check_circle,
-              Colors.green,
-            ),
-          ),
         ],
       ),
     );
@@ -519,16 +510,6 @@ class AlertsScreen extends StatelessWidget {
                       Icon(Icons.visibility, size: 18, color: Colors.grey[700]),
                       SizedBox(width: 12),
                       Text('View Details'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'resolve',
-                  child: Row(
-                    children: [
-                      Icon(Icons.check_circle, size: 18, color: Colors.green),
-                      SizedBox(width: 12),
-                      Text('Resolve', style: TextStyle(color: Colors.green)),
                     ],
                   ),
                 ),

@@ -8,11 +8,19 @@ import 'dart:io';
 
 import 'package:pawfect_vendor_app/services/onboarding_service.dart';
 import 'package:pawfect_vendor_app/core/network/api_exceptions.dart';
+import 'package:pawfect_vendor_app/core/network/api_response.dart';
 
 class OnboardingController extends GetxController {
   final OnboardingService _onboardingService = OnboardingService();
 
-  // Removed unnecessary onInit override
+  // ✅ Use TextEditingControllers for better control
+  final storeNameController = TextEditingController();
+  final panNumberController = TextEditingController();
+  final gstNumberController = TextEditingController();
+  final fssaiLicenseController = TextEditingController();
+  final addressController = TextEditingController();
+  final cityController = TextEditingController();
+  final pincodeController = TextEditingController();
 
   // Form fields
   RxString storeName = ''.obs;
@@ -32,28 +40,280 @@ class OnboardingController extends GetxController {
   RxString fssaiFileName = ''.obs;
 
   RxBool isLoading = false.obs;
+  RxBool isResubmission = false.obs; // ✅ Track if this is a resubmission
+  RxBool isFetchingData = false.obs; // ✅ Track data fetching state
+  String? onboardingId; // ✅ Store onboarding ID for updates
+
+  // ✅ Track which fields have errors
+  RxMap<String, String> fieldErrors = <String, String>{}.obs;
+  RxString rejectionReason = ''.obs; // ✅ Store full rejection reason
+  RxBool isEditMode =
+      false.obs; // ✅ Track if user is just editing (not resubmitting rejection)
+
+  @override
+  void onInit() {
+    super.onInit();
+    // ✅ Check if we need to load existing data for resubmission
+    fetchOnboardingDataIfNeeded();
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // FETCH EXISTING DATA FOR RESUBMISSION
+  // ══════════════════════════════════════════════════════════════════════════
+  Future<void> fetchOnboardingDataIfNeeded() async {
+    isFetchingData.value = true;
+
+    try {
+      final response = await _onboardingService.getOnboardingData();
+
+      if (response.success && response.data != null) {
+        final data = response.data;
+
+        // ✅ Check if KYC is rejected - then populate form
+        final kycStatus = data['kycStatus'] ?? '';
+
+        if (kycStatus == 'rejected' ||
+            kycStatus == 'pending' ||
+            kycStatus == 'approved') {
+          isResubmission.value = true;
+          onboardingId = data['_id'];
+
+          // ✅ Determine if this is edit mode (approved) or rejection mode
+          isEditMode.value = (kycStatus == 'approved');
+
+          // ✅ Populate form fields using controllers
+          storeNameController.text = data['storeName'] ?? '';
+          storeName.value = data['storeName'] ?? '';
+
+          businessType.value = data['businessType'] ?? '';
+
+          panNumberController.text = data['panNumber'] ?? '';
+          panNumber.value = data['panNumber'] ?? '';
+
+          gstNumberController.text = data['gstNumber'] ?? '';
+          gstNumber.value = data['gstNumber'] ?? '';
+
+          fssaiLicenseController.text = data['fssaiLicense'] ?? '';
+          fssaiLicense.value = data['fssaiLicense'] ?? '';
+
+          // ✅ Populate address fields
+          if (data['storeAddress'] != null) {
+            final storeAddress = data['storeAddress'];
+
+            addressController.text = storeAddress['address'] ?? '';
+            address.value = storeAddress['address'] ?? '';
+
+            cityController.text = storeAddress['city'] ?? '';
+            city.value = storeAddress['city'] ?? '';
+
+            state.value = storeAddress['state'] ?? '';
+
+            pincodeController.text = storeAddress['pincode'] ?? '';
+            pincode.value = storeAddress['pincode'] ?? '';
+          }
+
+          // ✅ Store existing file URLs (don't download, just keep reference)
+          if (data['aadhaarProof'] != null &&
+              data['aadhaarProof'].toString().isNotEmpty) {
+            aadhaarProof.value = data['aadhaarProof'];
+            aadhaarFileName.value = 'Existing Aadhaar Document';
+          }
+
+          if (data['fssaiCertificate'] != null &&
+              data['fssaiCertificate'].toString().isNotEmpty) {
+            fssaiCertificate.value = data['fssaiCertificate'];
+            fssaiFileName.value = 'Existing FSSAI Certificate';
+          }
+
+          log(
+            '✅ Form populated with existing data for ${isEditMode.value ? "editing" : "resubmission"}',
+          );
+
+          // ✅ Store rejection reason and parse field errors ONLY if rejected
+          if (kycStatus == 'rejected' && data['kycRejectionReason'] != null) {
+            rejectionReason.value = data['kycRejectionReason'];
+            _parseRejectionReason(data['kycRejectionReason']);
+
+            // ✅ Show rejection message
+            Get.snackbar(
+              'KYC Rejected',
+              rejectionReason.value,
+              backgroundColor: Colors.red.shade100,
+              colorText: Colors.red.shade900,
+              snackPosition: SnackPosition.TOP,
+              margin: EdgeInsets.all(16),
+              borderRadius: 8,
+              duration: Duration(seconds: 6),
+              icon: Icon(Icons.error_outline, color: Colors.red.shade900),
+            );
+          } else if (kycStatus == 'approved') {
+            // Clear any previous errors for edit mode
+            rejectionReason.value = '';
+            fieldErrors.clear();
+
+            // ✅ Show edit mode message
+            Get.snackbar(
+              'Edit KYC Documents',
+              'You can update your KYC information below.',
+              backgroundColor: Colors.blue.shade100,
+              colorText: Colors.blue.shade900,
+              snackPosition: SnackPosition.TOP,
+              margin: EdgeInsets.all(16),
+              borderRadius: 8,
+              duration: Duration(seconds: 3),
+              icon: Icon(Icons.edit, color: Colors.blue.shade900),
+            );
+          } else {
+            // ✅ Show info message for pending
+            Get.snackbar(
+              'Resubmission Mode',
+              'Your previous data has been loaded. Update any fields and resubmit.',
+              backgroundColor: Colors.blue.shade100,
+              colorText: Colors.blue.shade900,
+              snackPosition: SnackPosition.TOP,
+              margin: EdgeInsets.all(16),
+              borderRadius: 8,
+              duration: Duration(seconds: 4),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      log('❌ Error fetching onboarding data: $e');
+      // Don't show error - user can still fill form manually
+    } finally {
+      isFetchingData.value = false;
+    }
+  }
 
   // ══════════════════════════════════════════════════════════════════════════
   // SETTERS
   // ══════════════════════════════════════════════════════════════════════════
-  void setStoreName(String value) => storeName.value = value;
-  void setBusinessType(String value) => businessType.value = value;
-  void setPanNumber(String value) => panNumber.value = value.toUpperCase();
-  void setGstNumber(String value) => gstNumber.value = value.toUpperCase();
-  void setFssaiLicense(String value) => fssaiLicense.value = value;
-  void setAddress(String value) => address.value = value;
-  void setCity(String value) => city.value = value;
-  void setState(String value) => state.value = value;
-  void setPincode(String value) => pincode.value = value;
+  void setStoreName(String value) {
+    storeName.value = value;
+    fieldErrors.remove('storeName'); // Clear error when user edits
+  }
+
+  void setBusinessType(String value) {
+    businessType.value = value;
+    fieldErrors.remove('businessType');
+  }
+
+  void setPanNumber(String value) {
+    panNumber.value = value.toUpperCase();
+    fieldErrors.remove('panNumber');
+  }
+
+  void setGstNumber(String value) {
+    gstNumber.value = value.toUpperCase();
+    fieldErrors.remove('gstNumber');
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // PARSE REJECTION REASON TO IDENTIFY PROBLEMATIC FIELDS
+  // ══════════════════════════════════════════════════════════════════════════
+  void _parseRejectionReason(String reason) {
+    fieldErrors.clear();
+
+    final reasonLower = reason.toLowerCase();
+
+    // ✅ Map keywords to field names
+    final fieldKeywords = {
+      'store name': 'storeName',
+      'storename': 'storeName',
+      'business type': 'businessType',
+      'businesstype': 'businessType',
+      'pan': 'panNumber',
+      'pan number': 'panNumber',
+      'pannumber': 'panNumber',
+      'gst': 'gstNumber',
+      'gst number': 'gstNumber',
+      'gstnumber': 'gstNumber',
+      'fssai': 'fssaiCertificate',
+      'fssai license': 'fssaiLicense',
+      'fssai certificate': 'fssaiCertificate',
+      'fssailicense': 'fssaiLicense',
+      'fssaicertificate': 'fssaiCertificate',
+      'aadhaar': 'aadhaarProof',
+      'aadhar': 'aadhaarProof',
+      'aadhaar proof': 'aadhaarProof',
+      'aadhar proof': 'aadhaarProof',
+      'aadhaarproof': 'aadhaarProof',
+      'aadharproof': 'aadhaarProof',
+      'address': 'address',
+      'city': 'city',
+      'state': 'state',
+      'pincode': 'pincode',
+      'pin code': 'pincode',
+    };
+
+    // ✅ Check which fields are mentioned in the rejection reason
+    fieldKeywords.forEach((keyword, fieldName) {
+      if (reasonLower.contains(keyword)) {
+        fieldErrors[fieldName] = reason;
+        log('🔴 Field error detected: $fieldName');
+      }
+    });
+
+    // ✅ If no specific field found, mark all document fields as potential issues
+    if (fieldErrors.isEmpty) {
+      log('⚠️ No specific field found in rejection reason, marking documents');
+      fieldErrors['aadhaarProof'] = reason;
+      fieldErrors['fssaiCertificate'] = reason;
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // CHECK IF FIELD HAS ERROR
+  // ══════════════════════════════════════════════════════════════════════════
+  bool hasFieldError(String fieldName) {
+    return fieldErrors.containsKey(fieldName);
+  }
+
+  String? getFieldError(String fieldName) {
+    return fieldErrors[fieldName];
+  }
+
+  void setFssaiLicense(String value) {
+    fssaiLicense.value = value;
+    fieldErrors.remove('fssaiLicense');
+  }
+
+  void setAddress(String value) {
+    address.value = value;
+    fieldErrors.remove('address');
+  }
+
+  void setCity(String value) {
+    city.value = value;
+    fieldErrors.remove('city');
+  }
+
+  void setState(String value) {
+    state.value = value;
+    fieldErrors.remove('state');
+  }
+
+  void setPincode(String value) {
+    pincode.value = value;
+    fieldErrors.remove('pincode');
+  }
 
   void setAadhaarProof(String path) {
     aadhaarProof.value = path;
     aadhaarFileName.value = path.split('/').last;
+    fieldErrors.remove(
+      'aadhaarProof',
+    ); // Clear error when user uploads new file
   }
 
   void setFssaiCertificate(String path) {
     fssaiCertificate.value = path;
     fssaiFileName.value = path.split('/').last;
+    fieldErrors.remove(
+      'fssaiCertificate',
+    ); // Clear error when user uploads new file
+    fieldErrors.remove('fssaiLicense'); // Also clear fssai license error
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -210,13 +470,15 @@ class OnboardingController extends GetxController {
       return false;
     }
 
-    // Verify files exist
-    if (!File(aadhaarProof.value).existsSync()) {
+    // ✅ Verify files exist (only for local files, not URLs)
+    if (!aadhaarProof.value.startsWith('http') &&
+        !File(aadhaarProof.value).existsSync()) {
       _showError('Aadhaar proof file not found');
       return false;
     }
 
-    if (!File(fssaiCertificate.value).existsSync()) {
+    if (!fssaiCertificate.value.startsWith('http') &&
+        !File(fssaiCertificate.value).existsSync()) {
       _showError('FSSAI certificate file not found');
       return false;
     }
@@ -243,31 +505,148 @@ class OnboardingController extends GetxController {
     isLoading.value = true;
 
     try {
-      final response = await _onboardingService.submitOnboarding(
-        storeName: storeName.value.trim(),
-        businessType: businessType.value,
-        panNumber: panNumber.value,
-        gstNumber: gstNumber.value.trim(),
-        fssaiLicense: fssaiLicense.value.trim(),
-        address: address.value.trim(),
-        city: city.value.trim(),
-        state: state.value,
-        pincode: pincode.value,
-        aadhaarProof: aadhaarProof.value,
-        fssaiCertificate: fssaiCertificate.value,
-      );
+      final ApiResponse response;
+
+      // ✅ Check if this is a resubmission or new submission
+      if (isResubmission.value) {
+        log('📤 Resubmitting onboarding data...');
+
+        response = await _onboardingService.updateOnboarding(
+          storeName: storeName.value.trim(),
+          businessType: businessType.value,
+          panNumber: panNumber.value,
+          gstNumber: gstNumber.value.trim(),
+          fssaiLicense: fssaiLicense.value.trim(),
+          address: address.value.trim(),
+          city: city.value.trim(),
+          state: state.value,
+          pincode: pincode.value,
+          // ✅ Only send files if they are new (local paths, not URLs)
+          aadhaarProof:
+              aadhaarProof.value.startsWith('http') ? null : aadhaarProof.value,
+          fssaiCertificate:
+              fssaiCertificate.value.startsWith('http')
+                  ? null
+                  : fssaiCertificate.value,
+        );
+      } else {
+        log('📤 Submitting new onboarding data...');
+
+        response = await _onboardingService.submitOnboarding(
+          storeName: storeName.value.trim(),
+          businessType: businessType.value,
+          panNumber: panNumber.value,
+          gstNumber: gstNumber.value.trim(),
+          fssaiLicense: fssaiLicense.value.trim(),
+          address: address.value.trim(),
+          city: city.value.trim(),
+          state: state.value,
+          pincode: pincode.value,
+          aadhaarProof: aadhaarProof.value,
+          fssaiCertificate: fssaiCertificate.value,
+        );
+      }
 
       if (response.success) {
-        _showSuccess(response.message ?? 'Onboarding submitted successfully');
+        _showSuccess(
+          response.message ??
+              (isEditMode.value
+                  ? 'KYC documents updated successfully'
+                  : (isResubmission.value
+                      ? 'KYC resubmitted successfully'
+                      : 'Onboarding submitted successfully')),
+        );
 
-        // Navigate to waiting screen
+        // Navigate based on mode
         await Future.delayed(Duration(milliseconds: 500));
-        Get.offNamed('/onboardingWaiting');
+
+        if (isEditMode.value) {
+          // In edit mode, go back to profile or home
+          Get.back(); // Go back to profile screen
+          Get.snackbar(
+            'Success',
+            'Your KYC documents have been updated successfully',
+            backgroundColor: Colors.green.shade100,
+            colorText: Colors.green.shade900,
+            snackPosition: SnackPosition.BOTTOM,
+            margin: EdgeInsets.all(16),
+            borderRadius: 8,
+            duration: Duration(seconds: 3),
+            icon: Icon(Icons.check_circle, color: Colors.green.shade900),
+          );
+        } else {
+          // For new submission or resubmission, go to waiting screen
+          Get.offNamed('/onboardingWaiting');
+        }
       } else {
         log('❌ Onboarding submission failed: ${response.message}');
 
-        // Handle API validation errors
-        _handleApiError(response);
+        // ✅ Special handling for approved KYC update restriction
+        if (isEditMode.value &&
+            response.message?.toLowerCase().contains('already approved') ==
+                true) {
+          Get.dialog(
+            AlertDialog(
+              title: Row(
+                children: [
+                  Icon(Icons.info_outline, color: Colors.blue, size: 28),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Update Not Allowed',
+                      style: TextStyle(
+                        color: Colors.blue.shade700,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Your KYC is already approved and cannot be updated at this time.',
+                    style: TextStyle(fontSize: 14, height: 1.5),
+                  ),
+                  SizedBox(height: 12),
+                  Text(
+                    'If you need to update your documents, please contact our support team.',
+                    style: TextStyle(fontSize: 14, height: 1.5),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(onPressed: () => Get.back(), child: Text('Close')),
+                ElevatedButton(
+                  onPressed: () {
+                    Get.back();
+                    // TODO: Open support contact
+                    Get.snackbar(
+                      'Contact Support',
+                      'Email: support@pawfect.com\nPhone: +91 1800-XXX-XXXX',
+                      backgroundColor: Colors.blue.shade100,
+                      colorText: Colors.blue.shade900,
+                      duration: Duration(seconds: 5),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue.shade600,
+                  ),
+                  child: Text(
+                    'Contact Support',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+            barrierDismissible: false,
+          );
+        } else {
+          // Handle other API validation errors
+          _handleApiError(response);
+        }
       }
     } catch (e) {
       log('❌ Submit error: $e');
@@ -538,6 +917,14 @@ class OnboardingController extends GetxController {
   // CLEAR FORM
   // ══════════════════════════════════════════════════════════════════════════
   void clearForm() {
+    storeNameController.clear();
+    panNumberController.clear();
+    gstNumberController.clear();
+    fssaiLicenseController.clear();
+    addressController.clear();
+    cityController.clear();
+    pincodeController.clear();
+
     storeName.value = '';
     businessType.value = '';
     panNumber.value = '';
@@ -555,7 +942,15 @@ class OnboardingController extends GetxController {
 
   @override
   void onClose() {
-    clearForm();
+    // Dispose controllers
+    storeNameController.dispose();
+    panNumberController.dispose();
+    gstNumberController.dispose();
+    fssaiLicenseController.dispose();
+    addressController.dispose();
+    cityController.dispose();
+    pincodeController.dispose();
+
     super.onClose();
   }
 

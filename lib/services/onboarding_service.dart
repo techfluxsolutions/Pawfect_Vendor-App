@@ -98,6 +98,109 @@ class OnboardingService {
     }
   }
 
+  // ✅ Fetch existing onboarding data for resubmission
+  Future<ApiResponse> getOnboardingData() async {
+    try {
+      print('📥 Fetching onboarding data...');
+      final response = await _apiClient.get('/onboarding');
+
+      if (response.success) {
+        print('✅ Onboarding data fetched successfully');
+      }
+
+      return response;
+    } catch (e) {
+      print('❌ Get onboarding data error: $e');
+      return ApiResponse.error(message: e.toString());
+    }
+  }
+
+  // ✅ Update existing onboarding data (resubmission)
+  Future<ApiResponse> updateOnboarding({
+    required String storeName,
+    required String businessType,
+    required String panNumber,
+    String? gstNumber,
+    String? fssaiLicense,
+    required String address,
+    required String city,
+    required String state,
+    required String pincode,
+    String? aadhaarProof, // Optional - only if changed
+    String? fssaiCertificate, // Optional - only if changed
+  }) async {
+    try {
+      print('📤 Starting onboarding update...');
+
+      // ✅ Prepare form data
+      final Map<String, dynamic> formData = {
+        'storeName': storeName,
+        'businessType': businessType,
+        'panNumber': panNumber.toUpperCase(),
+        'address': address,
+        'city': city,
+        'state': state,
+        'pincode': pincode,
+      };
+
+      // Add optional fields if provided
+      if (gstNumber != null && gstNumber.isNotEmpty) {
+        formData['gstNumber'] = gstNumber.toUpperCase();
+      }
+      if (fssaiLicense != null && fssaiLicense.isNotEmpty) {
+        formData['fssaiLicense'] = fssaiLicense;
+      }
+
+      // ✅ Add files only if they are new (local file paths)
+      if (aadhaarProof != null &&
+          aadhaarProof.isNotEmpty &&
+          !aadhaarProof.startsWith('http')) {
+        final aadhaarFile = await MultipartFile.fromFile(
+          aadhaarProof,
+          filename: aadhaarProof.split('/').last,
+        );
+        formData['aadhaarProof'] = aadhaarFile;
+        print('📄 New Aadhaar file added');
+      }
+
+      if (fssaiCertificate != null &&
+          fssaiCertificate.isNotEmpty &&
+          !fssaiCertificate.startsWith('http')) {
+        final fssaiFile = await MultipartFile.fromFile(
+          fssaiCertificate,
+          filename: fssaiCertificate.split('/').last,
+        );
+        formData['fssaiCertificate'] = fssaiFile;
+        print('📄 New FSSAI file added');
+      }
+
+      print('📦 Form data prepared for update');
+
+      // ✅ Use uploadFile with PUT method
+      final response = await _apiClient.put(
+        '/onboarding',
+        data: FormData.fromMap(formData),
+      );
+
+      if (response.success) {
+        // Update user verification status if needed
+        if (response.data != null && response.data['user'] != null) {
+          await _updateUserVerificationStatus(response.data['user']);
+        }
+
+        print('✅ Onboarding updated successfully');
+      }
+
+      return response;
+    } on FileSystemException catch (e) {
+      print('❌ File not found: $e');
+      return ApiResponse.error(message: 'File not found: ${e.message}');
+    } catch (e) {
+      print('❌ Onboarding update error: $e');
+      return ApiResponse.error(message: e.toString());
+    }
+  }
+
   Future<void> _updateUserVerificationStatus(
     Map<String, dynamic> userData,
   ) async {

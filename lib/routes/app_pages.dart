@@ -52,5 +52,12 @@ class AppPages {
         Get.lazyPut<LegalController>(() => LegalController());
       }),
     ),
+    GetPage(
+      name: AppRoutes.faq,
+      page: () => FAQScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<FAQController>(() => FAQController());
+      }),
+    ),
   ];
 }
