@@ -22,4 +22,6 @@ abstract class AppRoutes {
   static const String reports = '/reports';
   static const String inventory = '/inventory';
   static const String alertsManagement = '/alerts-management';
+  static const String termsConditions = '/terms-conditions';
+  static const String privacyPolicy = '/privacy-policy';
 }

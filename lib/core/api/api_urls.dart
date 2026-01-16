@@ -8,4 +8,5 @@ class ApiUrls {
   static const String orders = "/orders";
   static const String topSelling = "/top-selling";
   static const String analytics = "/analytics";
+  static const String alerts = "/alerts";
 }

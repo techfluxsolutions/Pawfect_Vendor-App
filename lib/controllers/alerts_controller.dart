@@ -1,5 +1,6 @@
 import 'dart:developer';
 import '../libs.dart';
+import '../services/alerts_service.dart';
 
 class AlertsController extends GetxController {
   // Loading States
@@ -34,7 +35,9 @@ class AlertsController extends GetxController {
     loadAlerts();
   }
 
-  // ========== Load Alerts ==========
+  // ══════════════════════════════════════════════════════════════════════════
+  // LOAD ALERTS
+  // ══════════════════════════════════════════════════════════════════════════
 
   Future<void> loadAlerts({bool isRefresh = false}) async {
     if (isRefresh) {
@@ -44,96 +47,60 @@ class AlertsController extends GetxController {
     }
 
     try {
-      // TODO: Replace with actual API call
-      await Future.delayed(Duration(milliseconds: 800));
+      // Call the actual API using the service
+      final alertsService = AlertsService();
+      final response = await alertsService.getAlerts();
 
-      // Generate dummy alerts data
-      final newAlerts = _generateDummyAlerts();
+      if (response.success && response.data != null) {
+        // Convert API alerts to AlertModel for UI compatibility
+        final newAlerts =
+            response.data!.alerts
+                .map((apiAlert) => apiAlert.toAlertModel())
+                .toList();
 
-      alerts.value = newAlerts;
-      _calculateSummary();
-      applyFilters();
+        alerts.value = newAlerts;
 
-      log('✅ Alerts loaded');
+        // Update summary with API data
+        totalAlerts.value = response.data!.summary.total;
+        criticalAlerts.value = response.data!.summary.critical;
+
+        // Calculate resolved today (this might need to come from API in future)
+        resolvedToday.value = 0; // TODO: Get from API when available
+
+        applyFilters();
+
+        log('✅ Alerts loaded from API');
+      } else {
+        throw Exception(response.message ?? 'Failed to load alerts');
+      }
     } catch (e) {
       log('❌ Error loading alerts: $e');
+
+      // Show error to user instead of fallback data
       Get.snackbar(
         'Error',
-        'Failed to load alerts',
+        'Failed to load alerts. Please check your connection and try again.',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
+        duration: Duration(seconds: 3),
       );
+
+      // Clear alerts on error
+      alerts.clear();
+      totalAlerts.value = 0;
+      criticalAlerts.value = 0;
+      resolvedToday.value = 0;
+      applyFilters();
     } finally {
       isLoading.value = false;
       isRefreshing.value = false;
     }
   }
 
-  List<AlertModel> _generateDummyAlerts() {
-    return [
-      AlertModel(
-        type: AlertType.lowStock,
-        title: 'Low Stock Alert',
-        message: 'Premium Dog Food 5kg - Only 2 units left',
-        count: 2,
-        actionRoute: AppRoutes.inventory,
-      ),
-      AlertModel(
-        type: AlertType.lowStock,
-        title: 'Low Stock Alert',
-        message: 'Cat Food Premium - Only 1 unit left',
-        count: 1,
-        actionRoute: AppRoutes.inventory,
-      ),
-      AlertModel(
-        type: AlertType.lowStock,
-        title: 'Low Stock Alert',
-        message: 'Dog Treats Pack - Only 3 units left',
-        count: 3,
-        actionRoute: AppRoutes.inventory,
-      ),
-      AlertModel(
-        type: AlertType.newOrder,
-        title: 'New Order Received',
-        message: 'Order #ORD-2024-001 from John Doe - ₹1,250',
-        count: 1,
-        actionRoute: AppRoutes.orders,
-      ),
-      AlertModel(
-        type: AlertType.newOrder,
-        title: 'New Order Received',
-        message: 'Order #ORD-2024-002 from Jane Smith - ₹890',
-        count: 1,
-        actionRoute: AppRoutes.orders,
-      ),
-      AlertModel(
-        type: AlertType.general,
-        title: 'System Maintenance',
-        message: 'Scheduled maintenance on Jan 15, 2025 at 2:00 AM',
-        count: 1,
-      ),
-      AlertModel(
-        type: AlertType.general,
-        title: 'Payment Gateway Update',
-        message: 'New payment options available for customers',
-        count: 1,
-      ),
-    ];
-  }
-
-  void _calculateSummary() {
-    totalAlerts.value = alerts.length;
-    criticalAlerts.value =
-        alerts
-            .where((a) => a.type == AlertType.lowStock && a.count <= 2)
-            .length;
-
-    // Simulate resolved alerts today
-    resolvedToday.value = 3;
-  }
-
-  // ========== Search & Filter ==========
+  // ══════════════════════════════════════════════════════════════════════════
+  // SEARCH & FILTER
+  // ══════════════════════════════════════════════════════════════════════════
 
   void setSearchQuery(String query) {
     searchQuery.value = query;
@@ -198,32 +165,45 @@ class AlertsController extends GetxController {
     applyFilters();
   }
 
-  // ========== Alert Actions ==========
+  // ══════════════════════════════════════════════════════════════════════════
+  // ALERT ACTIONS
+  // ══════════════════════════════════════════════════════════════════════════
 
   Future<void> resolveAlert(AlertModel alert) async {
     isResolvingAlert.value = true;
 
     try {
-      // TODO: Replace with actual API call
-      await Future.delayed(Duration(milliseconds: 500));
+      // Use the alert ID if available, otherwise generate a placeholder
+      final alertId =
+          alert.id ?? 'placeholder-${DateTime.now().millisecondsSinceEpoch}';
 
-      // Remove alert from list
-      alerts.removeWhere((a) => a == alert);
-      applyFilters();
-      _calculateSummary();
+      // Call the API to resolve the alert
+      final alertsService = AlertsService();
+      final response = await alertsService.resolveAlert(alertId);
 
-      Get.snackbar(
-        'Success',
-        'Alert resolved successfully',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-        duration: Duration(seconds: 2),
-      );
+      if (response.success) {
+        // Remove alert from list
+        alerts.removeWhere((a) => a == alert);
+        applyFilters();
+        _calculateSummary();
+
+        Get.snackbar(
+          'Success',
+          'Alert resolved successfully',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          duration: Duration(seconds: 2),
+        );
+      } else {
+        throw Exception(response.message ?? 'Failed to resolve alert');
+      }
     } catch (e) {
+      log('❌ Error resolving alert: $e');
+
       Get.snackbar(
         'Error',
-        'Failed to resolve alert',
+        'Failed to resolve alert. Please try again.',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
@@ -363,7 +343,18 @@ class AlertsController extends GetxController {
     );
   }
 
-  // ========== Helper Methods ==========
+  // ══════════════════════════════════════════════════════════════════════════
+  // HELPER METHODS
+  // ══════════════════════════════════════════════════════════════════════════
+
+  void _calculateSummary() {
+    totalAlerts.value = alerts.length;
+    criticalAlerts.value =
+        alerts
+            .where((a) => a.type == AlertType.lowStock && a.count <= 2)
+            .length;
+    // resolvedToday remains as set from API or 0
+  }
 
   IconData getAlertTypeIcon(AlertType type) {
     switch (type) {
@@ -373,8 +364,6 @@ class AlertsController extends GetxController {
         return Icons.shopping_bag;
       case AlertType.general:
         return Icons.info;
-      default:
-        return Icons.notifications;
     }
   }
 
@@ -386,8 +375,6 @@ class AlertsController extends GetxController {
         return Colors.green;
       case AlertType.general:
         return Colors.purple;
-      default:
-        return Colors.grey;
     }
   }
 
@@ -399,12 +386,12 @@ class AlertsController extends GetxController {
         return 'New Order';
       case AlertType.general:
         return 'General';
-      default:
-        return 'Alert';
     }
   }
 
-  // ========== Refresh ==========
+  // ══════════════════════════════════════════════════════════════════════════
+  // REFRESH
+  // ══════════════════════════════════════════════════════════════════════════
 
   Future<void> refreshAlerts() async {
     await loadAlerts(isRefresh: true);

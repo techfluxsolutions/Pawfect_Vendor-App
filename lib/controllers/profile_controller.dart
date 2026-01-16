@@ -1,8 +1,11 @@
 import 'dart:developer';
 
 import '../libs.dart';
+import '../services/profile_service.dart';
 
 class ProfileController extends GetxController {
+  final ProfileService _profileService = ProfileService();
+
   // Store Information
   var storeName = 'Pawfect Pet Store'.obs;
   var storeLogoUrl = ''.obs;
@@ -34,24 +37,35 @@ class ProfileController extends GetxController {
     isLoading.value = true;
 
     try {
-      // TODO: Replace with actual API call
-      await Future.delayed(Duration(milliseconds: 500));
+      log('📊 Loading profile data...');
 
-      // Dummy data
-      storeName.value = 'Pawfect Pet Store';
-      storeLogoUrl.value = ''; // Leave empty for default icon
-      isStoreActive.value = true;
-      ownerName.value = 'John Doe';
-      email.value = 'john.doe@pawfect.com';
-      mobileNumber.value = '+91 9876543210';
-      isEmailVerified.value = true;
-      isMobileVerified.value = true;
-      storeRating.value = 4.5;
-      totalReviews.value = 128;
+      final response = await _profileService.getProfileData();
 
-      log('✅ Profile data loaded');
+      if (response.success && response.data != null) {
+        final data = response.data;
+
+        // Update profile data from API response
+        storeName.value = data['storeName'] ?? 'Pawfect Pet Store';
+        storeLogoUrl.value = data['storeLogoUrl'] ?? '';
+        isStoreActive.value = data['isStoreActive'] ?? true;
+        ownerName.value = data['ownerName'] ?? 'John Doe';
+        email.value = data['email'] ?? 'john.doe@pawfect.com';
+        mobileNumber.value = data['mobileNumber'] ?? '+91 9876543210';
+        isEmailVerified.value = data['isEmailVerified'] ?? true;
+        isMobileVerified.value = data['isMobileVerified'] ?? true;
+        storeRating.value = (data['storeRating'] ?? 4.5).toDouble();
+        totalReviews.value = data['totalReviews'] ?? 128;
+
+        log('✅ Profile data loaded successfully');
+      } else {
+        // Use dummy data if API fails
+        log('⚠️ API failed, using dummy data: ${response.message}');
+        _loadDummyData();
+      }
     } catch (e) {
       log('❌ Error loading profile data: $e');
+      _loadDummyData();
+
       Get.snackbar(
         'Error',
         'Failed to load profile data',
@@ -64,6 +78,19 @@ class ProfileController extends GetxController {
     }
   }
 
+  void _loadDummyData() {
+    storeName.value = 'Pawfect Pet Store';
+    storeLogoUrl.value = '';
+    isStoreActive.value = true;
+    ownerName.value = 'John Doe';
+    email.value = 'john.doe@pawfect.com';
+    mobileNumber.value = '+91 9876543210';
+    isEmailVerified.value = true;
+    isMobileVerified.value = true;
+    storeRating.value = 4.5;
+    totalReviews.value = 128;
+  }
+
   // ========== Store Status Toggle ==========
 
   Future<void> toggleStoreStatus() async {
@@ -71,29 +98,34 @@ class ProfileController extends GetxController {
       // Show loading state
       isLoading.value = true;
 
-      // TODO: Replace with actual API call to update store status
-      await Future.delayed(Duration(milliseconds: 800));
+      log('🔄 Toggling store status to: ${!isStoreActive.value}');
 
-      // Toggle the status
-      isStoreActive.value = !isStoreActive.value;
-
-      // Show success message
-      Get.snackbar(
-        'Store Status Updated',
-        'Your store is now ${isStoreActive.value ? 'Active' : 'Inactive'}',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: isStoreActive.value ? Colors.green : Colors.orange,
-        colorText: Colors.white,
-        duration: Duration(seconds: 2),
-        icon: Icon(
-          isStoreActive.value ? Icons.check_circle : Icons.pause_circle,
-          color: Colors.white,
-        ),
+      final response = await _profileService.updateStoreStatus(
+        !isStoreActive.value,
       );
 
-      log(
-        '✅ Store status toggled to: ${isStoreActive.value ? 'Active' : 'Inactive'}',
-      );
+      if (response.success) {
+        // Toggle the status
+        isStoreActive.value = !isStoreActive.value;
+
+        // Show success message
+        Get.snackbar(
+          'Store Status Updated',
+          'Your store is now ${isStoreActive.value ? 'Active' : 'Inactive'}',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: isStoreActive.value ? Colors.green : Colors.orange,
+          colorText: Colors.white,
+          duration: Duration(seconds: 2),
+          icon: Icon(
+            isStoreActive.value ? Icons.check_circle : Icons.pause_circle,
+            color: Colors.white,
+          ),
+        );
+
+        log('✅ Store status toggled successfully');
+      } else {
+        throw Exception(response.message ?? 'Failed to update store status');
+      }
     } catch (e) {
       log('❌ Error toggling store status: $e');
       Get.snackbar(
@@ -310,25 +342,11 @@ class ProfileController extends GetxController {
   }
 
   void navigateToTerms() {
-    Get.snackbar(
-      'Terms & Conditions',
-      'View terms and conditions',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.blue,
-      colorText: Colors.white,
-      duration: Duration(seconds: 2),
-    );
+    Get.toNamed(AppRoutes.termsConditions);
   }
 
   void navigateToPrivacy() {
-    Get.snackbar(
-      'Privacy Policy',
-      'View privacy policy',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.blue,
-      colorText: Colors.white,
-      duration: Duration(seconds: 2),
-    );
+    Get.toNamed(AppRoutes.privacyPolicy);
   }
 
   // ========== Logout ==========

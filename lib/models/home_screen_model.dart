@@ -3,37 +3,45 @@
 enum AlertType { lowStock, newOrder, general }
 
 class AlertModel {
+  final String? id;
   final AlertType type;
   final String title;
   final String message;
   final int count;
   final String? actionRoute;
+  final DateTime? date;
 
   AlertModel({
+    this.id,
     required this.type,
     required this.title,
     required this.message,
     this.count = 0,
     this.actionRoute,
+    this.date,
   });
 
   factory AlertModel.fromJson(Map<String, dynamic> json) {
     return AlertModel(
+      id: json['id']?.toString(),
       type: _alertTypeFromString(json['type'] ?? 'general'),
       title: json['title'] ?? '',
       message: json['message'] ?? '',
       count: json['count'] ?? 0,
       actionRoute: json['actionRoute'],
+      date: json['date'] != null ? DateTime.parse(json['date']) : null,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'type': type.toString().split('.').last,
       'title': title,
       'message': message,
       'count': count,
       'actionRoute': actionRoute,
+      'date': date?.toIso8601String(),
     };
   }
 

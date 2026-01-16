@@ -38,5 +38,19 @@ class AppPages {
     GetPage(name: AppRoutes.analytics, page: () => AnalyticsScreen()),
     GetPage(name: AppRoutes.reports, page: () => ReportsScreen()),
     GetPage(name: AppRoutes.inventory, page: () => InventoryScreen()),
+    GetPage(
+      name: AppRoutes.termsConditions,
+      page: () => TermsConditionsScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<LegalController>(() => LegalController());
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.privacyPolicy,
+      page: () => PrivacyPolicyScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<LegalController>(() => LegalController());
+      }),
+    ),
   ];
 }
