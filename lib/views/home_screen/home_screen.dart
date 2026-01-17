@@ -19,20 +19,20 @@
 //   }
 // }
 
-import 'package:pawfect_vendor_app/controllers/home_screen_controller.dart';
-import 'package:pawfect_vendor_app/models/home_screen_model.dart';
+import 'dart:developer';
 
 import '../../libs.dart';
 
 class HomeScreen extends StatelessWidget {
   HomeScreen({super.key});
 
-  final HomeScreenController controller = Get.put(HomeScreenController());
+  final HomeScreenController controller = Get.find<HomeScreenController>();
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final primaryColor = theme.colorScheme.primary;
+    log('Build');
 
     return Scaffold(
       backgroundColor: Colors.grey[50],

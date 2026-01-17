@@ -152,17 +152,17 @@ class OnboardingController extends GetxController {
             fieldErrors.clear();
 
             // ✅ Show edit mode message
-            Get.snackbar(
-              'Edit KYC Documents',
-              'You can update your KYC information below.',
-              backgroundColor: Colors.blue.shade100,
-              colorText: Colors.blue.shade900,
-              snackPosition: SnackPosition.TOP,
-              margin: EdgeInsets.all(16),
-              borderRadius: 8,
-              duration: Duration(seconds: 3),
-              icon: Icon(Icons.edit, color: Colors.blue.shade900),
-            );
+            // Get.snackbar(
+            //   'Edit KYC Documents',
+            //   'You can update your KYC information below.',
+            //   backgroundColor: Colors.blue.shade100,
+            //   colorText: Colors.blue.shade900,
+            //   snackPosition: SnackPosition.TOP,
+            //   margin: EdgeInsets.all(16),
+            //   borderRadius: 8,
+            //   duration: Duration(seconds: 3),
+            //   icon: Icon(Icons.edit, color: Colors.blue.shade900),
+            // );
           } else {
             // ✅ Show info message for pending
             Get.snackbar(

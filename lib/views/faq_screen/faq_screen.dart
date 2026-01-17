@@ -4,7 +4,7 @@ import '../../controllers/faq_controller.dart';
 class FAQScreen extends StatelessWidget {
   FAQScreen({super.key});
 
-  final FAQController controller = Get.put(FAQController());
+  final FAQController controller = Get.find<FAQController>();
 
   @override
   Widget build(BuildContext context) {

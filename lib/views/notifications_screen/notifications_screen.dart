@@ -4,7 +4,8 @@ import '../../controllers/notifications_controller.dart';
 class NotificationsScreen extends StatelessWidget {
   NotificationsScreen({super.key});
 
-  final NotificationsController controller = Get.put(NotificationsController());
+  final NotificationsController controller =
+      Get.find<NotificationsController>();
   final ScrollController _scrollController = ScrollController();
 
   @override

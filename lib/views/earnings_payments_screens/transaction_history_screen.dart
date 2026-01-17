@@ -4,9 +4,8 @@ import '../../controllers/transaction_history_controller.dart';
 class TransactionHistoryScreen extends StatelessWidget {
   TransactionHistoryScreen({super.key});
 
-  final TransactionHistoryController controller = Get.put(
-    TransactionHistoryController(),
-  );
+  final TransactionHistoryController controller =
+      Get.find<TransactionHistoryController>();
   final ScrollController _scrollController = ScrollController();
 
   @override

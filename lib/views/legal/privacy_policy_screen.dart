@@ -6,7 +6,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final LegalController controller = Get.put(LegalController());
+    final LegalController controller = Get.find<LegalController>();
     final theme = Theme.of(context);
     final primaryColor = theme.colorScheme.primary;
 

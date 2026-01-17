@@ -95,7 +95,7 @@ import '../../libs.dart';
 class OnboardingWaitingScreen extends StatelessWidget {
   OnboardingWaitingScreen({super.key});
 
-  final WaitingController controller = Get.put(WaitingController());
+  final WaitingController controller = Get.find<WaitingController>();
 
   @override
   Widget build(BuildContext context) {

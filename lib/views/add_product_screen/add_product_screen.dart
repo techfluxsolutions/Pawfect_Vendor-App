@@ -5,7 +5,7 @@ import '../../libs.dart';
 class AddProductScreen extends StatelessWidget {
   AddProductScreen({super.key});
 
-  final ProductController controller = Get.put(ProductController());
+  final ProductController controller = Get.find<ProductController>();
 
   @override
   Widget build(BuildContext context) {
@@ -14,6 +14,9 @@ class AddProductScreen extends StatelessWidget {
     final primaryColor = theme.colorScheme.primary;
 
     final productId = Get.arguments as String?;
+
+    log("Product Autofilled data ${controller.productImages}");
+    log("Product Id $productId");
 
     // ✅ Clear form if no productId (adding new product)
     if (productId == null) {
@@ -48,7 +51,7 @@ class AddProductScreen extends StatelessWidget {
                       _buildTextField(
                         controller: controller.nameController,
                         label: 'Product Name',
-                        hint: 'e.g., Premium Dog Food - Chicken & Rice',
+                        hint: 'Enter product name',
                         icon: Icons.inventory_2,
                         validator:
                             (v) =>
@@ -70,7 +73,7 @@ class AddProductScreen extends StatelessWidget {
                             child: _buildTextField(
                               controller: controller.mrpController,
                               label: 'MRP',
-                              hint: '1599',
+                              hint: 'Enter MRP',
                               icon: Icons.currency_rupee,
                               keyboardType: TextInputType.number,
                               validator: controller.validatePrice,
@@ -82,7 +85,7 @@ class AddProductScreen extends StatelessWidget {
                             child: _buildTextField(
                               controller: controller.priceController,
                               label: 'Selling Price',
-                              hint: '1299',
+                              hint: 'Enter selling price',
                               icon: Icons.sell,
                               keyboardType: TextInputType.number,
                               validator: controller.validatePrice,
@@ -136,7 +139,7 @@ class AddProductScreen extends StatelessWidget {
                             child: _buildTextField(
                               controller: controller.stockQuantityController,
                               label: 'Stock Quantity',
-                              hint: '50',
+                              hint: 'Enter stock quantity',
                               icon: Icons.inventory,
                               keyboardType: TextInputType.number,
                               validator:
@@ -151,7 +154,7 @@ class AddProductScreen extends StatelessWidget {
                             child: _buildTextField(
                               controller: controller.weightController,
                               label: 'Weight',
-                              hint: '5kg, 400g, etc.',
+                              hint: 'Enter weight with unit',
                               icon: Icons.scale,
                               validator:
                                   (v) =>
@@ -169,7 +172,7 @@ class AddProductScreen extends StatelessWidget {
                       _buildTextField(
                         controller: controller.descriptionController,
                         label: 'Product Description',
-                        hint: 'Describe your product in detail...',
+                        hint: 'Enter product description',
                         icon: Icons.description,
                         maxLines: 4,
                         validator:
@@ -190,7 +193,7 @@ class AddProductScreen extends StatelessWidget {
                       _buildTextField(
                         controller: controller.deliveryEstimateController,
                         label: 'Delivery Estimate',
-                        hint: 'e.g., 2-3 business days',
+                        hint: 'Enter delivery estimate',
                         icon: Icons.local_shipping,
                         validator:
                             (v) => controller.validateRequired(
@@ -315,12 +318,12 @@ class AddProductScreen extends StatelessWidget {
       () => DropdownButtonFormField<String>(
         value:
             controller
-                    .selectedPetType
+                    .formSelectedPetType
                     .value
-                    .isEmpty // ✅ Change to selectedPetType
+                    .isEmpty // ✅ Change to formSelectedPetType
                 ? null
-                : controller.selectedPetType.value,
-        hint: Text('Select Pet Type'), // ✅ Change hint
+                : controller.formSelectedPetType.value,
+        hint: Text('Select pet type'),
         items:
             controller.petTypes.map((type) {
               // ✅ Use petTypes instead of categories
@@ -328,7 +331,8 @@ class AddProductScreen extends StatelessWidget {
             }).toList(),
         onChanged:
             (value) =>
-                controller.selectedPetType.value = value ?? '', // ✅ Set petType
+                controller.formSelectedPetType.value =
+                    value ?? '', // ✅ Set petType
         decoration: InputDecoration(
           labelText: 'Pet Type', // ✅ Change label
           prefixIcon: Icon(Icons.pets), // ✅ Change icon
@@ -337,7 +341,7 @@ class AddProductScreen extends StatelessWidget {
           fillColor: Colors.grey[50],
         ),
         validator: (v) {
-          if (controller.selectedPetType.value.isEmpty) {
+          if (controller.formSelectedPetType.value.isEmpty) {
             // ✅ Validate petType
             return 'Please select a pet type';
           }
@@ -381,15 +385,16 @@ class AddProductScreen extends StatelessWidget {
     return Obx(
       () => DropdownButtonFormField<String>(
         value:
-            controller.selectedFoodType.value.isEmpty
+            controller.formSelectedFoodType.value.isEmpty
                 ? null
-                : controller.selectedFoodType.value,
-        hint: Text('Select Food Type'),
+                : controller.formSelectedFoodType.value,
+        hint: Text('Select food type'),
         items:
             controller.foodTypes.map((type) {
               return DropdownMenuItem(value: type, child: Text(type));
             }).toList(),
-        onChanged: (value) => controller.selectedFoodType.value = value ?? '',
+        onChanged:
+            (value) => controller.formSelectedFoodType.value = value ?? '',
         decoration: InputDecoration(
           labelText: 'Food Type',
           prefixIcon: Icon(Icons.fastfood),
@@ -399,7 +404,7 @@ class AddProductScreen extends StatelessWidget {
         ),
         // ✅ ADD VALIDATOR
         validator: (v) {
-          if (controller.selectedFoodType.value.isEmpty) {
+          if (controller.formSelectedFoodType.value.isEmpty) {
             return 'Please select a food type';
           }
           return null;
@@ -435,15 +440,19 @@ class AddProductScreen extends StatelessWidget {
           ),
           SizedBox(height: 12),
           Obx(() {
-            return controller.productImages.isEmpty
-                ? _buildAddImageButton(context, primaryColor)
-                : Column(
+            final hasExistingImages = controller.existingImageUrls.isNotEmpty;
+            final hasNewImages = controller.productImages.isNotEmpty;
+            final hasAnyImages = hasExistingImages || hasNewImages;
+
+            return hasAnyImages
+                ? Column(
                   children: [
                     _buildImageGrid(primaryColor),
                     SizedBox(height: 12),
                     _buildAddImageButton(context, primaryColor),
                   ],
-                );
+                )
+                : _buildAddImageButton(context, primaryColor);
           }),
         ],
       ),
@@ -485,8 +494,10 @@ class AddProductScreen extends StatelessWidget {
   }
 
   Widget _buildImageGrid(Color primaryColor) {
-    return Obx(
-      () => GridView.builder(
+    return Obx(() {
+      final totalImages = controller.getTotalImageCount();
+
+      return GridView.builder(
         shrinkWrap: true,
         physics: NeverScrollableScrollPhysics(),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -494,38 +505,152 @@ class AddProductScreen extends StatelessWidget {
           crossAxisSpacing: 8,
           mainAxisSpacing: 8,
         ),
-        itemCount: controller.productImages.length,
+        itemCount: totalImages,
         itemBuilder: (context, index) {
-          return Stack(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.file(
-                  controller.productImages[index],
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
+          final existingImagesCount = controller.existingImageUrls.length;
+
+          // Show existing images first, then new images
+          if (index < existingImagesCount) {
+            // Existing image from API
+            return _buildExistingImageItem(index, primaryColor);
+          } else {
+            // New image from device
+            final newImageIndex = index - existingImagesCount;
+            return _buildNewImageItem(newImageIndex, primaryColor);
+          }
+        },
+      );
+    });
+  }
+
+  Widget _buildExistingImageItem(int index, Color primaryColor) {
+    return Stack(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.network(
+            controller.existingImageUrls[index],
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(8),
                 ),
-              ),
-              Positioned(
-                top: 4,
-                right: 4,
-                child: GestureDetector(
-                  onTap: () => controller.removeImage(index),
-                  child: Container(
-                    padding: EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(Icons.close, color: Colors.white, size: 16),
+                child: Center(
+                  child: CircularProgressIndicator(
+                    value:
+                        loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                            : null,
                   ),
                 ),
+              );
+            },
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(Icons.error, color: Colors.red),
+              );
+            },
+          ),
+        ),
+        // Existing image indicator
+        Positioned(
+          top: 4,
+          left: 4,
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: Colors.blue,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              'Existing',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
               ),
-            ],
-          );
-        },
-      ),
+            ),
+          ),
+        ),
+        // Remove button
+        Positioned(
+          top: 4,
+          right: 4,
+          child: GestureDetector(
+            onTap: () => controller.removeExistingImage(index),
+            child: Container(
+              padding: EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.close, color: Colors.white, size: 16),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNewImageItem(int index, Color primaryColor) {
+    return Stack(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.file(
+            controller.productImages[index],
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+          ),
+        ),
+        // New image indicator
+        Positioned(
+          top: 4,
+          left: 4,
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: Colors.green,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              'New',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+        // Remove button
+        Positioned(
+          top: 4,
+          right: 4,
+          child: GestureDetector(
+            onTap: () => controller.removeImage(index),
+            child: Container(
+              padding: EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.close, color: Colors.white, size: 16),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -561,7 +686,7 @@ class AddProductScreen extends StatelessWidget {
                 child: TextField(
                   controller: controller.benefitController,
                   decoration: InputDecoration(
-                    hintText: 'Add a benefit...',
+                    hintText: 'Enter product benefit',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),

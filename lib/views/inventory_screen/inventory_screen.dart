@@ -4,7 +4,7 @@ import '../../controllers/inventory_controller.dart';
 class InventoryScreen extends StatelessWidget {
   InventoryScreen({super.key});
 
-  final InventoryController controller = Get.put(InventoryController());
+  final InventoryController controller = Get.find<InventoryController>();
   final ScrollController _scrollController = ScrollController();
 
   @override

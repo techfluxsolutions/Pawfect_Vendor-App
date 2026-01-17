@@ -3,7 +3,7 @@ import 'package:pawfect_vendor_app/libs.dart';
 class Home extends StatelessWidget {
   Home({super.key});
 
-  final HomeController navController = Get.put(HomeController());
+  final HomeController navController = Get.find<HomeController>();
 
   final List<Widget> _pages = [
     HomeScreen(),

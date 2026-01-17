@@ -5,7 +5,7 @@ import '../../models/order_model.dart';
 class OrdersScreen extends StatelessWidget {
   OrdersScreen({super.key});
 
-  final OrdersController controller = Get.put(OrdersController());
+  final OrdersController controller = Get.find<OrdersController>();
   final ScrollController _scrollController = ScrollController();
 
   @override

@@ -14,9 +14,9 @@ class ProfileController extends GetxController {
   // Account Information
   var ownerName = 'John Doe'.obs;
   var email = 'john.doe@pawfect.com'.obs;
-  var mobileNumber = '+91 9876543210'.obs;
+  var mobileNumber = ''.obs; // ✅ Will be loaded from storage
   var isEmailVerified = true.obs;
-  var isMobileVerified = true.obs;
+  var isMobileVerified = false.obs; // ✅ Will be loaded from storage
 
   // Store Ratings
   var storeRating = 0.0.obs; // ✅ Default to 0.0
@@ -29,8 +29,87 @@ class ProfileController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    // loadProfileData();
+    loadStoreInfo(); // ✅ Load store info from KYC API
+    loadUserInfo(); // ✅ Load user info from storage
     loadReviewStats(); // ✅ Load review stats
+  }
+
+  // ========== Load Store Info from KYC API ==========
+
+  Future<void> loadStoreInfo() async {
+    try {
+      log('📊 Loading store info from KYC API...');
+
+      final response = await ApiClient().get(ApiUrls.kycStatus);
+
+      if (response.success && response.data != null) {
+        final vendor = response.data['vendor'];
+
+        if (vendor != null) {
+          // ✅ Update store name from API response
+          storeName.value = vendor['storeName'] ?? 'Pawfect Pet Store';
+
+          log('✅ Store info loaded: ${storeName.value}');
+        } else {
+          log('⚠️ No vendor data in KYC response');
+        }
+      } else {
+        log('⚠️ KYC API failed, using default store name: ${response.message}');
+      }
+    } catch (e) {
+      log('❌ Error loading store info: $e');
+      // Keep default store name on error
+    }
+  }
+
+  // ========== Load User Info from Storage ==========
+
+  void loadUserInfo() {
+    try {
+      log('📱 Loading user info from storage...');
+
+      final StorageService storage = StorageService.instance;
+
+      // ✅ Get mobile number from storage (saved during authentication)
+      final storedMobile = storage.getMobileNumber();
+      if (storedMobile != null && storedMobile.isNotEmpty) {
+        // Format mobile number with country code if not present
+        String formattedMobile = storedMobile;
+
+        // Remove any existing formatting
+        String cleanMobile = formattedMobile.replaceAll(RegExp(r'[^0-9]'), '');
+
+        // Add country code and formatting if needed
+        if (cleanMobile.length == 10) {
+          // Indian mobile number without country code
+          mobileNumber.value = '+91 $cleanMobile';
+        } else if (cleanMobile.length == 12 && cleanMobile.startsWith('91')) {
+          // Indian mobile number with country code but no +
+          mobileNumber.value = '+$cleanMobile';
+        } else if (storedMobile.startsWith('+91')) {
+          // Already properly formatted
+          mobileNumber.value = storedMobile;
+        } else {
+          // Use as is
+          mobileNumber.value = storedMobile;
+        }
+
+        log('✅ Mobile number loaded from storage: ${mobileNumber.value}');
+      } else {
+        log('⚠️ No mobile number found in storage, using default');
+      }
+
+      // ✅ Get verification status
+      final isVerified = storage.isUserVerified();
+      isMobileVerified.value = isVerified;
+
+      log(
+        '✅ User info loaded - Mobile: ${mobileNumber.value}, Verified: $isVerified',
+      );
+    } catch (e) {
+      log('❌ Error loading user info: $e');
+      // Keep default values on error
+    }
   }
 
   // ========== Load Profile Data ==========
@@ -79,18 +158,6 @@ class ProfileController extends GetxController {
   //     isLoading.value = false;
   //   }
   // }
-
-  void _loadDummyData() {
-    storeName.value = 'Pawfect Pet Store';
-    storeLogoUrl.value = '';
-    isStoreActive.value = true;
-    ownerName.value = 'John Doe';
-    email.value = 'john.doe@pawfect.com';
-    mobileNumber.value = '+91 9876543210';
-    isEmailVerified.value = true;
-    isMobileVerified.value = true;
-    // Don't set dummy ratings - keep them at 0
-  }
 
   // ========== Load Review Stats ==========
 
@@ -434,7 +501,9 @@ class ProfileController extends GetxController {
 
   // ========== Refresh Profile Data ==========
 
-  // Future<void> refreshProfile() async {
-  //   await loadProfileData();
-  // }
+  Future<void> refreshProfile() async {
+    await loadStoreInfo();
+    loadUserInfo(); // ✅ Load user info from storage
+    await loadReviewStats();
+  }
 }

@@ -4,7 +4,7 @@ import '../../controllers/analytics_controller.dart';
 class AnalyticsScreen extends StatelessWidget {
   AnalyticsScreen({super.key});
 
-  final AnalyticsController controller = Get.put(AnalyticsController());
+  final AnalyticsController controller = Get.find<AnalyticsController>();
 
   @override
   Widget build(BuildContext context) {

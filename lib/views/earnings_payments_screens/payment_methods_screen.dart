@@ -4,9 +4,8 @@ import '../../controllers/payment_methods_controller.dart';
 class PaymentMethodsScreen extends StatelessWidget {
   PaymentMethodsScreen({super.key});
 
-  final PaymentMethodsController controller = Get.put(
-    PaymentMethodsController(),
-  );
+  final PaymentMethodsController controller =
+      Get.find<PaymentMethodsController>();
 
   @override
   Widget build(BuildContext context) {

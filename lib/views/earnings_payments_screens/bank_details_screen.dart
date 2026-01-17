@@ -4,7 +4,7 @@ import '../../controllers/bank_details_controller.dart';
 class BankDetailsScreen extends StatelessWidget {
   BankDetailsScreen({super.key});
 
-  final BankDetailsController controller = Get.put(BankDetailsController());
+  final BankDetailsController controller = Get.find<BankDetailsController>();
 
   @override
   Widget build(BuildContext context) {

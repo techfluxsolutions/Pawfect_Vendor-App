@@ -1,7 +1,6 @@
 import 'dart:developer';
 import 'dart:io';
 
-
 import '../libs.dart';
 
 class ProductController extends GetxController {
@@ -44,11 +43,18 @@ class ProductController extends GetxController {
   final deliveryEstimateController = TextEditingController();
   final benefitController = TextEditingController();
 
+  // Form selection variables (separate from filter variables)
+  var formSelectedPetType = ''.obs;
+  var formSelectedFoodType = ''.obs;
+  var formSelectedCategory = ''.obs;
+
   // Benefits (dynamic list)
   var benefits = <String>[].obs;
 
   // Images
   var productImages = <File>[].obs;
+  var existingImageUrls =
+      <String>[].obs; // For storing existing image URLs when editing
   final ImagePicker _picker = ImagePicker();
 
   // Filter options
@@ -146,32 +152,76 @@ class ProductController extends GetxController {
   /// Load product data into form for editing
   Future<void> loadProductForEdit(ProductModel product) async {
     try {
-      // Populate form controllers with product data
-      nameController.text = product.name;
-      selectedPetType.value = product.petType;
-      selectedFoodType.value = product.foodType;
-      selectedCategory.value = product.category;
-      priceController.text = product.sellingPrice.toString();
-      mrpController.text = product.mrp.toString();
-      weightController.text = product.weight;
-      stockQuantityController.text = product.stockQuantity.toString();
-      descriptionController.text = product.description;
-      deliveryEstimateController.text = product.deliveryEstimate;
+      print('🔄 Loading complete product details for editing: ${product.id}');
+
+      // Fetch complete product details from API
+      final completeProduct = await getProductById(product.id);
+
+      if (completeProduct == null) {
+        print('❌ Failed to fetch complete product details');
+        // Fallback to basic product data
+        _populateFormWithBasicData(product);
+        return;
+      }
+
+      // Populate form controllers with complete product data
+      nameController.text = completeProduct.name;
+      formSelectedPetType.value = completeProduct.petType;
+      formSelectedFoodType.value = completeProduct.foodType;
+      formSelectedCategory.value = completeProduct.category;
+      priceController.text = completeProduct.sellingPrice.toString();
+      mrpController.text = completeProduct.mrp.toString();
+      weightController.text = completeProduct.weight;
+      stockQuantityController.text = completeProduct.stockQuantity.toString();
+      descriptionController.text = completeProduct.description;
+      deliveryEstimateController.text = completeProduct.deliveryEstimate;
 
       // Set benefits
-      benefits.value = product.benefits;
+      benefits.value = completeProduct.benefits;
 
-      print('✅ Product loaded for editing: ${product.name}');
+      // Load existing images from API
+      productImages.clear();
+      if (completeProduct.images.isNotEmpty) {
+        print('📸 Loading ${completeProduct.images.length} existing images');
+        // Convert image URLs to File objects for display
+        // Note: These are network images, not local files
+        // We'll handle this in the UI to show existing images
+        for (String imageUrl in completeProduct.images) {
+          print('🖼️ Image URL: $imageUrl');
+        }
+        // Store the existing image URLs for reference
+        existingImageUrls.value = completeProduct.images;
+      }
+
+      print('✅ Complete product loaded for editing: ${completeProduct.name}');
     } catch (e) {
-      print('❌ Error loading product: $e');
+      print('❌ Error loading complete product: $e');
+      // Fallback to basic product data
+      _populateFormWithBasicData(product);
       Get.snackbar(
-        'Error',
-        'Failed to load product for editing',
+        'Warning',
+        'Using basic product data. Some details may not be available.',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.orange,
         colorText: Colors.white,
       );
     }
+  }
+
+  /// Fallback method to populate form with basic product data
+  void _populateFormWithBasicData(ProductModel product) {
+    nameController.text = product.name;
+    formSelectedPetType.value = product.petType;
+    formSelectedFoodType.value = product.foodType;
+    formSelectedCategory.value = product.category;
+    priceController.text = product.sellingPrice.toString();
+    mrpController.text = product.mrp.toString();
+    weightController.text = product.weight;
+    stockQuantityController.text = product.stockQuantity.toString();
+    descriptionController.text = product.description;
+    deliveryEstimateController.text = product.deliveryEstimate;
+    benefits.value = product.benefits;
+    existingImageUrls.value = product.images; // Use basic image URLs
   }
 
   // ========== Update Product ==========
@@ -189,7 +239,7 @@ class ProductController extends GetxController {
       return;
     }
 
-    if (selectedPetType.value.isEmpty) {
+    if (formSelectedPetType.value.isEmpty) {
       Get.snackbar(
         'Validation Error',
         'Please select a pet type',
@@ -200,10 +250,21 @@ class ProductController extends GetxController {
       return;
     }
 
-    if (selectedFoodType.value.isEmpty) {
+    if (formSelectedFoodType.value.isEmpty) {
       Get.snackbar(
         'Validation Error',
         'Please select a food type',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    if (getTotalImageCount() == 0) {
+      Get.snackbar(
+        'Validation Error',
+        'Please add at least one product image',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.orange,
         colorText: Colors.white,
@@ -217,8 +278,8 @@ class ProductController extends GetxController {
       final response = await _productService.updateProduct(
         productId: productId,
         name: nameController.text.trim(),
-        category: selectedPetType.value,
-        foodType: selectedFoodType.value,
+        category: formSelectedPetType.value,
+        foodType: formSelectedFoodType.value,
         price: double.parse(priceController.text),
         mrp: double.parse(mrpController.text),
         weight: weightController.text.trim(),
@@ -542,10 +603,16 @@ class ProductController extends GetxController {
     await loadProductForEdit(product);
 
     // Then navigate to add product screen with product ID
-    Get.toNamed(
+    final result = await Get.toNamed(
       AppRoutes.addProduct,
       arguments: product.id, // Pass product ID
     );
+
+    // Handle return from edit
+    if (result == true) {
+      // Product was updated, refresh the list
+      fetchProducts();
+    }
   }
 
   void duplicateProduct(ProductModel product) async {
@@ -609,6 +676,14 @@ class ProductController extends GetxController {
     productImages.removeAt(index);
   }
 
+  void removeExistingImage(int index) {
+    existingImageUrls.removeAt(index);
+  }
+
+  int getTotalImageCount() {
+    return existingImageUrls.length + productImages.length;
+  }
+
   void showImagePickerOptions(BuildContext context) {
     Get.bottomSheet(
       Container(
@@ -633,7 +708,7 @@ class ProductController extends GetxController {
             ),
             ListTile(
               leading: Icon(
-                Icons.photo_library, 
+                Icons.photo_library,
                 color: Theme.of(context).primaryColor,
               ),
               title: Text('Gallery'),
@@ -717,7 +792,7 @@ class ProductController extends GetxController {
       return;
     }
 
-    if (selectedPetType.value.isEmpty) {
+    if (formSelectedPetType.value.isEmpty) {
       log('Pet type not selected');
       Get.snackbar(
         'Validation Error',
@@ -730,7 +805,7 @@ class ProductController extends GetxController {
     }
 
     // ✅ ADD THIS
-    if (selectedFoodType.value.isEmpty) {
+    if (formSelectedFoodType.value.isEmpty) {
       log('Food type not selected');
       Get.snackbar(
         'Validation Error',
@@ -742,7 +817,7 @@ class ProductController extends GetxController {
       return;
     }
 
-    if (productImages.isEmpty) {
+    if (getTotalImageCount() == 0) {
       log('No product images added');
       Get.snackbar(
         'Validation Error',
@@ -760,10 +835,10 @@ class ProductController extends GetxController {
       final response = await _productService.createProduct(
         name: nameController.text.trim(),
         category:
-            selectedPetType.value.isNotEmpty
-                ? selectedPetType.value
+            formSelectedPetType.value.isNotEmpty
+                ? formSelectedPetType.value
                 : 'Dog', // ✅ Use petType instead, with default
-        foodType: selectedFoodType.value,
+        foodType: formSelectedFoodType.value,
         price: double.parse(priceController.text),
         mrp: double.parse(mrpController.text),
         weight: weightController.text.trim(),
@@ -831,10 +906,11 @@ class ProductController extends GetxController {
     descriptionController.clear();
     deliveryEstimateController.clear();
     benefitController.clear();
-    selectedPetType.value = '';
-    selectedFoodType.value = '';
-    selectedCategory.value = '';
+    formSelectedPetType.value = '';
+    formSelectedFoodType.value = '';
+    formSelectedCategory.value = '';
     benefits.clear();
     productImages.clear();
+    existingImageUrls.clear(); // Clear existing image URLs
   }
 }

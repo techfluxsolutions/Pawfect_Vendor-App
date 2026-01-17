@@ -4,7 +4,7 @@ import '../../controllers/alerts_controller.dart';
 class AlertsScreen extends StatelessWidget {
   AlertsScreen({super.key});
 
-  final AlertsController controller = Get.put(AlertsController());
+  final AlertsController controller = Get.find<AlertsController>();
 
   @override
   Widget build(BuildContext context) {

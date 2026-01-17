@@ -4,7 +4,7 @@ import '../../controllers/reports_controller.dart';
 class ReportsScreen extends StatelessWidget {
   ReportsScreen({super.key});
 
-  final ReportsController controller = Get.put(ReportsController());
+  final ReportsController controller = Get.find<ReportsController>();
 
   @override
   Widget build(BuildContext context) {

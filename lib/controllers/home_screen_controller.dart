@@ -34,7 +34,37 @@ class HomeScreenController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    loadStoreInfo(); // ✅ Load store info from KYC API
     loadDashboardData();
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // LOAD STORE INFO FROM KYC API
+  // ══════════════════════════════════════════════════════════════════════════
+  Future<void> loadStoreInfo() async {
+    try {
+      log('📊 Loading store info from KYC API...');
+
+      final response = await ApiClient().get(ApiUrls.kycStatus);
+
+      if (response.success && response.data != null) {
+        final vendor = response.data['vendor'];
+
+        if (vendor != null) {
+          // ✅ Update store name from API response
+          storeName.value = vendor['storeName'] ?? 'Pawfect Store';
+
+          log('✅ Store info loaded: ${storeName.value}');
+        } else {
+          log('⚠️ No vendor data in KYC response');
+        }
+      } else {
+        log('⚠️ KYC API failed, using default store name: ${response.message}');
+      }
+    } catch (e) {
+      log('❌ Error loading store info: $e');
+      // Keep default store name on error
+    }
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -97,12 +127,12 @@ class HomeScreenController extends GetxController {
       } else {
         log('⚠️ Dashboard stats API failed: ${response.message}');
         // Keep current values (which are 0 initially)
-        _showInfoSnackbar('Using default dashboard values');
+        // _showInfoSnackbar('Using default dashboard values');
       }
     } catch (e) {
       log('❌ Error fetching dashboard stats: $e');
       // Keep current values (which are 0 initially)
-      _showInfoSnackbar('Dashboard stats will update when available');
+      // _showInfoSnackbar('Dashboard stats will update when available');
     }
   }
 
@@ -251,8 +281,8 @@ class HomeScreenController extends GetxController {
   // ══════════════════════════════════════════════════════════════════════════
   Future<void> fetchDummyData() async {
     try {
-      // Store info
-      storeName.value = 'Pawfect Pet Store';
+      // Store info - will be loaded from KYC API
+      // storeName.value = 'Pawfect Pet Store'; // ✅ Removed - now loaded from API
       isStoreActive.value = true;
       notificationCount.value = 5;
 
