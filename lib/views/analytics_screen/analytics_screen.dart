@@ -22,20 +22,112 @@ class AnalyticsScreen extends StatelessWidget {
       body: Obx(
         () =>
             controller.isLoading.value
-                ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CircularProgressIndicator(),
-                      SizedBox(height: 16),
-                      Text('Loading analytics...'),
-                    ],
-                  ),
-                )
+                ? _buildLoadingState()
                 : RefreshIndicator(
                   onRefresh: controller.refreshAnalytics,
                   child: _buildContent(primaryColor),
                 ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Period Selector Shimmer
+          Container(
+            height: 50,
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          SizedBox(height: 24),
+
+          // Sales Summary Title Shimmer
+          Container(
+            width: 150,
+            height: 24,
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ),
+          SizedBox(height: 16),
+
+          // Sales Summary Card Shimmer
+          Container(
+            height: 200,
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+          SizedBox(height: 24),
+
+          // Quick Stats Title Shimmer
+          Container(
+            width: 120,
+            height: 24,
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ),
+          SizedBox(height: 16),
+
+          // Quick Stats Cards Shimmer
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Container(
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Container(
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

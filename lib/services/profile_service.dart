@@ -1,5 +1,6 @@
 import '../core/network/api_client.dart';
 import '../core/network/api_response.dart';
+import '../core/api/api_urls.dart';
 
 class ProfileService {
   final ApiClient _apiClient = ApiClient();
@@ -9,9 +10,7 @@ class ProfileService {
   // ══════════════════════════════════════════════════════════════════════════
   Future<ApiResponse> getTermsAndConditions() async {
     try {
-      final response = await _apiClient.get(
-        '/terms',
-      ); // ✅ Fixed: Remove /user prefix
+      final response = await _apiClient.get(ApiUrls.terms);
       return response;
     } catch (e) {
       return ApiResponse.error(message: e.toString());
@@ -23,9 +22,7 @@ class ProfileService {
   // ══════════════════════════════════════════════════════════════════════════
   Future<ApiResponse> getPrivacyPolicy() async {
     try {
-      final response = await _apiClient.get(
-        '/privacy-policy',
-      ); // ✅ Fixed: Remove /user prefix
+      final response = await _apiClient.get(ApiUrls.privacyPolicy);
       return response;
     } catch (e) {
       return ApiResponse.error(message: e.toString());
@@ -35,14 +32,14 @@ class ProfileService {
   // ══════════════════════════════════════════════════════════════════════════
   // GET PROFILE DATA
   // ══════════════════════════════════════════════════════════════════════════
-  Future<ApiResponse> getProfileData() async {
-    try {
-      final response = await _apiClient.get('/profile');
-      return response;
-    } catch (e) {
-      return ApiResponse.error(message: e.toString());
-    }
-  }
+  // Future<ApiResponse> getProfileData() async {
+  //   try {
+  //     final response = await _apiClient.get(ApiUrls.profile);
+  //     return response;
+  //   } catch (e) {
+  //     return ApiResponse.error(message: e.toString());
+  //   }
+  // }
 
   // ══════════════════════════════════════════════════════════════════════════
   // UPDATE STORE STATUS
@@ -50,7 +47,7 @@ class ProfileService {
   Future<ApiResponse> updateStoreStatus(bool isActive) async {
     try {
       final response = await _apiClient.patch(
-        '/user/store-status',
+        ApiUrls.storeStatus,
         data: {'isActive': isActive},
       );
       return response;
@@ -64,7 +61,7 @@ class ProfileService {
   // ══════════════════════════════════════════════════════════════════════════
   Future<ApiResponse> getReviewStats() async {
     try {
-      final response = await _apiClient.get('/review-stats');
+      final response = await _apiClient.get(ApiUrls.reviewStats);
       return response;
     } catch (e) {
       return ApiResponse.error(message: e.toString());
@@ -76,7 +73,7 @@ class ProfileService {
   // ══════════════════════════════════════════════════════════════════════════
   Future<ApiResponse> getHelpFAQ() async {
     try {
-      final response = await _apiClient.get('/help-faq');
+      final response = await _apiClient.get(ApiUrls.helpFaq);
       return response;
     } catch (e) {
       return ApiResponse.error(message: e.toString());

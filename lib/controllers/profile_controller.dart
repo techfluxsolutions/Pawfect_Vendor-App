@@ -29,56 +29,56 @@ class ProfileController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    loadProfileData();
+    // loadProfileData();
     loadReviewStats(); // ✅ Load review stats
   }
 
   // ========== Load Profile Data ==========
 
-  Future<void> loadProfileData() async {
-    isLoading.value = true;
+  // Future<void> loadProfileData() async {
+  //   isLoading.value = true;
 
-    try {
-      log('📊 Loading profile data...');
+  //   try {
+  //     log('📊 Loading profile data...');
 
-      final response = await _profileService.getProfileData();
+  //     final response = await _profileService.getProfileData();
 
-      if (response.success && response.data != null) {
-        final data = response.data;
+  //     if (response.success && response.data != null) {
+  //       final data = response.data;
 
-        // Update profile data from API response
-        storeName.value = data['storeName'] ?? 'Pawfect Pet Store';
-        storeLogoUrl.value = data['storeLogoUrl'] ?? '';
-        isStoreActive.value = data['isStoreActive'] ?? true;
-        ownerName.value = data['ownerName'] ?? 'John Doe';
-        email.value = data['email'] ?? 'john.doe@pawfect.com';
-        mobileNumber.value = data['mobileNumber'] ?? '+91 9876543210';
-        isEmailVerified.value = data['isEmailVerified'] ?? true;
-        isMobileVerified.value = data['isMobileVerified'] ?? true;
-        storeRating.value = (data['storeRating'] ?? 4.5).toDouble();
-        totalReviews.value = data['totalReviews'] ?? 128;
+  //       // Update profile data from API response
+  //       storeName.value = data['storeName'] ?? 'Pawfect Pet Store';
+  //       storeLogoUrl.value = data['storeLogoUrl'] ?? '';
+  //       isStoreActive.value = data['isStoreActive'] ?? true;
+  //       ownerName.value = data['ownerName'] ?? 'John Doe';
+  //       email.value = data['email'] ?? 'john.doe@pawfect.com';
+  //       mobileNumber.value = data['mobileNumber'] ?? '+91 9876543210';
+  //       isEmailVerified.value = data['isEmailVerified'] ?? true;
+  //       isMobileVerified.value = data['isMobileVerified'] ?? true;
+  //       storeRating.value = (data['storeRating'] ?? 4.5).toDouble();
+  //       totalReviews.value = data['totalReviews'] ?? 128;
 
-        log('✅ Profile data loaded successfully');
-      } else {
-        // Use dummy data if API fails
-        log('⚠️ API failed, using dummy data: ${response.message}');
-        _loadDummyData();
-      }
-    } catch (e) {
-      log('❌ Error loading profile data: $e');
-      _loadDummyData();
+  //       log('✅ Profile data loaded successfully');
+  //     } else {
+  //       // Use dummy data if API fails
+  //       log('⚠️ API failed, using dummy data: ${response.message}');
+  //       _loadDummyData();
+  //     }
+  //   } catch (e) {
+  //     log('❌ Error loading profile data: $e');
+  //     _loadDummyData();
 
-      Get.snackbar(
-        'Error',
-        'Failed to load profile data',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    } finally {
-      isLoading.value = false;
-    }
-  }
+  //     Get.snackbar(
+  //       'Error',
+  //       'Failed to load profile data',
+  //       snackPosition: SnackPosition.BOTTOM,
+  //       backgroundColor: Colors.red,
+  //       colorText: Colors.white,
+  //     );
+  //   } finally {
+  //     isLoading.value = false;
+  //   }
+  // }
 
   void _loadDummyData() {
     storeName.value = 'Pawfect Pet Store';
@@ -434,7 +434,7 @@ class ProfileController extends GetxController {
 
   // ========== Refresh Profile Data ==========
 
-  Future<void> refreshProfile() async {
-    await loadProfileData();
-  }
+  // Future<void> refreshProfile() async {
+  //   await loadProfileData();
+  // }
 }

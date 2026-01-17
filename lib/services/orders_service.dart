@@ -99,8 +99,14 @@ class OrdersService {
     try {
       log('🔄 Updating order status: $orderId -> $status');
 
+      // ✅ Use cancel endpoint for cancelled status
+      if (status.toLowerCase() == 'cancelled') {
+        log('🔀 Routing to cancel endpoint for Cancelled status');
+        return await cancelOrder(orderId);
+      }
+
       final response = await _apiClient.put<Map<String, dynamic>>(
-        '${ApiUrls.orders}/$orderId/status',
+        ApiUrls.updateOrderStatus(orderId),
         data: {'status': status},
       );
 
@@ -124,6 +130,36 @@ class OrdersService {
   }
 
   // ══════════════════════════════════════════════════════════════════════════
+  // CANCEL ORDER
+  // ══════════════════════════════════════════════════════════════════════════
+  Future<ApiResponse<void>> cancelOrder(String orderId) async {
+    try {
+      log('❌ Cancelling order: $orderId');
+
+      final response = await _apiClient.post<Map<String, dynamic>>(
+        ApiUrls.cancelOrder(orderId),
+      );
+
+      if (response.success) {
+        log('✅ Order cancelled successfully');
+        return ApiResponse.success(
+          message: response.message ?? 'Order cancelled successfully',
+        );
+      } else {
+        log('⚠️ Order cancellation failed: ${response.message}');
+        return ApiResponse.error(
+          message: response.message ?? 'Failed to cancel order',
+        );
+      }
+    } catch (e) {
+      log('❌ Order cancellation error: $e');
+      return ApiResponse.error(
+        message: 'Failed to cancel order: ${e.toString()}',
+      );
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
   // GET ORDER DETAILS
   // ══════════════════════════════════════════════════════════════════════════
   Future<ApiResponse<OrdersApiModel>> getOrderDetails(String orderId) async {
@@ -131,7 +167,7 @@ class OrdersService {
       log('📋 Fetching order details: $orderId');
 
       final response = await _apiClient.get<Map<String, dynamic>>(
-        '${ApiUrls.orders}/$orderId',
+        ApiUrls.orderById(orderId),
       );
 
       if (response.success && response.data != null) {

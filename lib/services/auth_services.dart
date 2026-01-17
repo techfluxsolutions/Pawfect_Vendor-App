@@ -9,7 +9,7 @@ class AuthService {
       String cleanMobile = mobile.replaceAll(RegExp(r'[^0-9]'), '');
 
       final response = await _apiClient.post(
-        '/send-otp',
+        ApiUrls.sendOtp,
         data: {"mobileNumber": cleanMobile},
       );
 
@@ -27,7 +27,7 @@ class AuthService {
       String cleanMobile = mobile.replaceAll(RegExp(r'[^0-9]'), '');
 
       final response = await _apiClient.post(
-        '/verify-otp',
+        ApiUrls.verifyOtp,
         data: {"mobileNumber": cleanMobile, "otp": otp},
       );
 

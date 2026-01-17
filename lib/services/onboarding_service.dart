@@ -3,6 +3,7 @@ import 'dart:io';
 import '../core/network/api_client.dart';
 import '../core/network/api_response.dart';
 import '../core/storage/storage_service.dart';
+import '../core/api/api_urls.dart';
 
 class OnboardingService {
   final ApiClient _apiClient = ApiClient();
@@ -62,7 +63,7 @@ class OnboardingService {
 
       // ✅ Use uploadFile method instead of post
       final response = await _apiClient.uploadFile(
-        '/onboarding',
+        ApiUrls.onboarding,
         data: formData,
         onSendProgress: (sent, total) {
           final progress = (sent / total * 100).toStringAsFixed(0);
@@ -91,7 +92,7 @@ class OnboardingService {
 
   Future<ApiResponse> checkKycStatus() async {
     try {
-      final response = await _apiClient.get('/kyc-status');
+      final response = await _apiClient.get(ApiUrls.kycStatus);
       return response;
     } catch (e) {
       return ApiResponse.error(message: e.toString());
@@ -102,7 +103,7 @@ class OnboardingService {
   Future<ApiResponse> getOnboardingData() async {
     try {
       print('📥 Fetching onboarding data...');
-      final response = await _apiClient.get('/onboarding');
+      final response = await _apiClient.get(ApiUrls.onboarding);
 
       if (response.success) {
         print('✅ Onboarding data fetched successfully');
@@ -178,7 +179,7 @@ class OnboardingService {
 
       // ✅ Use uploadFile with PUT method
       final response = await _apiClient.put(
-        '/onboarding',
+        ApiUrls.onboarding,
         data: FormData.fromMap(formData),
       );
 

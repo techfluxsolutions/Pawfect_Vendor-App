@@ -23,7 +23,7 @@ class KycStatusService {
 
   Future<String> getCurrentKycStatus() async {
     try {
-      final response = await _apiClient.get('/kyc-status');
+      final response = await _apiClient.get(ApiUrls.kycStatus);
       if (response.success && response.data != null) {
         final kycStatus = response.data['kycStatus'] ?? 'pending';
 
@@ -66,7 +66,7 @@ class KycStatusService {
   Future<void> checkKycStatus() async {
     try {
       final response = await _apiClient.get(
-        '/kyc-status',
+        ApiUrls.kycStatus,
       ); // ✅ Use correct endpoint
 
       if (response.success && response.data != null) {

@@ -44,7 +44,7 @@ class AlertsService {
       log('🔄 Resolving alert: $alertId');
 
       final response = await _apiClient.post<Map<String, dynamic>>(
-        '${ApiUrls.alerts}/$alertId/resolve',
+        ApiUrls.resolveAlert(alertId),
       );
 
       if (response.success) {

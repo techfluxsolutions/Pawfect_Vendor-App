@@ -5,6 +5,7 @@ import 'dart:io';
 import '../core/network/api_client.dart';
 import '../core/network/api_response.dart';
 import '../core/storage/storage_service.dart';
+import '../core/api/api_urls.dart';
 
 class ProductService {
   final ApiClient _apiClient = ApiClient();
@@ -81,7 +82,7 @@ class ProductService {
 
       // ✅ Use uploadFile method for multipart/form-data
       final response = await _apiClient.uploadFile(
-        '/products',
+        ApiUrls.products,
         data: formData,
         onSendProgress: (sent, total) {
           final progress = (sent / total * 100).toStringAsFixed(0);
@@ -109,7 +110,9 @@ class ProductService {
     try {
       print('📋 Duplicating product: $productId');
 
-      final response = await _apiClient.post('/products/$productId/duplicate');
+      final response = await _apiClient.post(
+        ApiUrls.duplicateProduct(productId),
+      );
 
       if (response.success) {
         print('✅ Product duplicated successfully');
@@ -176,7 +179,7 @@ class ProductService {
 
       // ✅ Make GET request with query parameters
       final response = await _apiClient.get(
-        '/products',
+        ApiUrls.products,
         queryParameters: queryParams,
       );
 
@@ -198,7 +201,7 @@ class ProductService {
     try {
       print('📥 Fetching product: $productId');
 
-      final response = await _apiClient.get('/products/$productId');
+      final response = await _apiClient.get(ApiUrls.productById(productId));
 
       if (response.success) {
         print('✅ Product fetched successfully');
@@ -277,12 +280,15 @@ class ProductService {
       ApiResponse response;
       try {
         // Most REST APIs use PUT for updates
-        response = await _apiClient.put('/products/$productId', data: formData);
+        response = await _apiClient.put(
+          ApiUrls.productById(productId),
+          data: formData,
+        );
       } catch (e) {
         // If PUT fails, try with uploadFile (POST) method
         print('PUT failed, trying POST method...');
         response = await _apiClient.uploadFile(
-          '/products/$productId',
+          ApiUrls.productById(productId),
           data: formData,
         );
       }
@@ -303,7 +309,7 @@ class ProductService {
     try {
       print('🗑️ Deleting product: $productId');
 
-      final response = await _apiClient.delete('/products/$productId');
+      final response = await _apiClient.delete(ApiUrls.productById(productId));
 
       if (response.success) {
         print('✅ Product deleted successfully');
