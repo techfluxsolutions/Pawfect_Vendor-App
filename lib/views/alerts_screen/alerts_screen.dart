@@ -1,5 +1,4 @@
 import '../../libs.dart';
-import '../../controllers/alerts_controller.dart';
 
 class AlertsScreen extends StatelessWidget {
   AlertsScreen({super.key});

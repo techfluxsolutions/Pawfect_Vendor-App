@@ -47,10 +47,9 @@ class OrdersController extends GetxController {
   // Filter Options
   final List<Map<String, String>> statusOptions = [
     {'value': 'all', 'label': 'All Orders'},
-    {'value': 'Pending', 'label': 'Pending'},
     {'value': 'Processing', 'label': 'Processing'},
-    {'value': 'Completed', 'label': 'Completed'},
     {'value': 'Shipped', 'label': 'Shipped'},
+    {'value': 'Out for Delivery', 'label': 'Out for Delivery'},
     {'value': 'Delivered', 'label': 'Delivered'},
     {'value': 'Cancelled', 'label': 'Cancelled'},
   ];
@@ -98,7 +97,7 @@ class OrdersController extends GetxController {
     }
 
     try {
-      log('📦 Loading orders from API...');
+      // log('📦 Loading orders from API...');
 
       final response = await _ordersService.getOrders(
         search: searchQuery.value.isNotEmpty ? searchQuery.value : null,

@@ -219,20 +219,6 @@ class AddProductScreen extends StatelessWidget {
     );
   }
 
-  // PreferredSizeWidget _buildAppBar(Color primaryColor) {
-  //   return AppBar(
-  //     title: Text('Add Product'),
-  //     centerTitle: true,
-  //     backgroundColor: primaryColor,
-  //     foregroundColor: Colors.white,
-  //     elevation: 0,
-  //     leading: IconButton(
-  //       icon: Icon(Icons.arrow_back),
-  //       onPressed: () => Get.back(),
-  //     ),
-  //   );
-  // }
-
   PreferredSizeWidget _buildAppBar(
     Color primaryColor, {
     bool isEditing = false,
@@ -350,36 +336,6 @@ class AddProductScreen extends StatelessWidget {
       ),
     );
   }
-
-  // Widget _buildCategoryDropdown(Color primaryColor) {
-  //   return Obx(
-  //     () => DropdownButtonFormField<String>(
-  //       value:
-  //           controller.selectedCategory.value.isEmpty
-  //               ? null
-  //               : controller.selectedCategory.value,
-  //       hint: Text('Select Category'),
-  //       items:
-  //           controller.categories.map((category) {
-  //             return DropdownMenuItem(value: category, child: Text(category));
-  //           }).toList(),
-  //       onChanged: (value) => controller.selectedCategory.value = value ?? '',
-  //       decoration: InputDecoration(
-  //         labelText: 'Category',
-  //         prefixIcon: Icon(Icons.category),
-  //         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-  //         filled: true,
-  //         fillColor: Colors.grey[50],
-  //       ),
-  //       validator: (v) {
-  //         if (controller.selectedCategory.value.isEmpty) {
-  //           return 'Please select a category';
-  //         }
-  //         return null;
-  //       },
-  //     ),
-  //   );
-  // }
 
   Widget _buildFoodTypeDropdown(Color primaryColor) {
     return Obx(
@@ -826,65 +782,4 @@ class AddProductScreen extends StatelessWidget {
       );
     });
   }
-
-  // Widget _buildActionButtons(Color primaryColor) {
-  //   return Obx(() {
-  //     return Row(
-  //       children: [
-  //         Expanded(
-  //           child: OutlinedButton(
-  //             onPressed:
-  //                 controller.isSaving.value ? null : controller.clearForm,
-  //             style: OutlinedButton.styleFrom(
-  //               padding: EdgeInsets.symmetric(vertical: 16),
-  //               side: BorderSide(color: Colors.grey[400]!),
-  //               shape: RoundedRectangleBorder(
-  //                 borderRadius: BorderRadius.circular(8),
-  //               ),
-  //             ),
-  //             child: Text(
-  //               'Clear',
-  //               style: TextStyle(color: Colors.grey[700], fontSize: 16),
-  //             ),
-  //           ),
-  //         ),
-  //         SizedBox(width: 12),
-  //         Expanded(
-  //           flex: 2,
-  //           child: ElevatedButton(
-  //             onPressed:
-  //                 controller.isSaving.value ? null : controller.saveProduct,
-  //             style: ElevatedButton.styleFrom(
-  //               backgroundColor: primaryColor,
-  //               padding: EdgeInsets.symmetric(vertical: 16),
-  //               shape: RoundedRectangleBorder(
-  //                 borderRadius: BorderRadius.circular(8),
-  //               ),
-  //             ),
-  //             child:
-  //                 controller.isSaving.value
-  //                     ? SizedBox(
-  //                       height: 20,
-  //                       width: 20,
-  //                       child: CircularProgressIndicator(
-  //                         valueColor: AlwaysStoppedAnimation<Color>(
-  //                           Colors.white,
-  //                         ),
-  //                         strokeWidth: 2,
-  //                       ),
-  //                     )
-  //                     : Text(
-  //                       'Add Product',
-  //                       style: TextStyle(
-  //                         color: Colors.white,
-  //                         fontSize: 16,
-  //                         fontWeight: FontWeight.w600,
-  //                       ),
-  //                     ),
-  //           ),
-  //         ),
-  //       ],
-  //     );
-  //   });
-  // }
 }

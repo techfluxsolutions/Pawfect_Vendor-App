@@ -1,7 +1,5 @@
 import 'dart:developer';
 import '../libs.dart';
-import '../models/faq_model.dart';
-import '../services/profile_service.dart';
 
 class FAQController extends GetxController {
   final ProfileService _profileService = ProfileService();

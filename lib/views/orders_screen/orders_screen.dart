@@ -1,6 +1,4 @@
 import '../../libs.dart';
-import '../../controllers/orders_controller.dart';
-import '../../models/order_model.dart';
 
 class OrdersScreen extends StatelessWidget {
   OrdersScreen({super.key});

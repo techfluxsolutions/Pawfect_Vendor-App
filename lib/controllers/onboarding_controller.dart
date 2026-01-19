@@ -1,14 +1,11 @@
 import 'dart:developer';
 
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 
-import 'package:pawfect_vendor_app/services/onboarding_service.dart';
 import 'package:pawfect_vendor_app/core/network/api_exceptions.dart';
-import 'package:pawfect_vendor_app/core/network/api_response.dart';
+
+import '../libs.dart';
 
 class OnboardingController extends GetxController {
   final OnboardingService _onboardingService = OnboardingService();

@@ -186,7 +186,7 @@ class ProductService {
       if (response.success) {
         print('✅ Products fetched successfully');
         print('📦 Products count: ${response.data?['products']?.length ?? 0}');
-        log('📦 Products data: ${response.data}');
+        // log('📦 Products data: ${response.data}');
       }
 
       return response;

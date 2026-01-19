@@ -38,7 +38,7 @@ class ProfileController extends GetxController {
 
   Future<void> loadStoreInfo() async {
     try {
-      log('📊 Loading store info from KYC API...');
+      // log('📊 Loading store info from KYC API...');
 
       final response = await ApiClient().get(ApiUrls.kycStatus);
 
