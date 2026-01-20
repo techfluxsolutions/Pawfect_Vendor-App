@@ -554,26 +554,62 @@ class OnboardingController extends GetxController {
                       : 'Onboarding submitted successfully')),
         );
 
-        // Navigate based on mode
+        // Navigate based on mode and response status
         await Future.delayed(Duration(milliseconds: 500));
 
         if (isEditMode.value) {
-          // In edit mode, go back to profile or home
-          Get.back(); // Go back to profile screen
-          Get.snackbar(
-            'Success',
-            'Your KYC documents have been updated successfully',
-            backgroundColor: Colors.green.shade100,
-            colorText: Colors.green.shade900,
-            snackPosition: SnackPosition.BOTTOM,
-            margin: EdgeInsets.all(16),
-            borderRadius: 8,
-            duration: Duration(seconds: 3),
-            icon: Icon(Icons.check_circle, color: Colors.green.shade900),
-          );
+          // Check if the response contains updated KYC status
+          final responseData = response.data;
+          final newKycStatus = responseData?['kycStatus'] ?? 'pending';
+
+          log('📊 Updated KYC Status: $newKycStatus');
+
+          if (newKycStatus == 'pending') {
+            // KYC is now pending after update - go to waiting screen
+            Get.offNamed(AppRoutes.onboardingWaitingScreen);
+            Get.snackbar(
+              'KYC Under Review',
+              'Your updated documents are now under review. You will be notified once approved.',
+              backgroundColor: Colors.orange.shade100,
+              colorText: Colors.orange.shade900,
+              snackPosition: SnackPosition.BOTTOM,
+              margin: EdgeInsets.all(16),
+              borderRadius: 8,
+              duration: Duration(seconds: 4),
+              icon: Icon(Icons.hourglass_empty, color: Colors.orange.shade900),
+            );
+          } else if (newKycStatus == 'approved') {
+            // Still approved - go back to profile
+            Get.back(); // Go back to profile screen
+            Get.snackbar(
+              'Success',
+              'Your KYC documents have been updated successfully',
+              backgroundColor: Colors.green.shade100,
+              colorText: Colors.green.shade900,
+              snackPosition: SnackPosition.BOTTOM,
+              margin: EdgeInsets.all(16),
+              borderRadius: 8,
+              duration: Duration(seconds: 3),
+              icon: Icon(Icons.check_circle, color: Colors.green.shade900),
+            );
+          } else {
+            // Any other status - go back to profile with generic message
+            Get.back();
+            Get.snackbar(
+              'Success',
+              'Your KYC documents have been updated successfully',
+              backgroundColor: Colors.green.shade100,
+              colorText: Colors.green.shade900,
+              snackPosition: SnackPosition.BOTTOM,
+              margin: EdgeInsets.all(16),
+              borderRadius: 8,
+              duration: Duration(seconds: 3),
+              icon: Icon(Icons.check_circle, color: Colors.green.shade900),
+            );
+          }
         } else {
           // For new submission or resubmission, go to waiting screen
-          Get.offNamed('/onboardingWaiting');
+          Get.offNamed(AppRoutes.onboardingWaitingScreen);
         }
       } else {
         log('❌ Onboarding submission failed: ${response.message}');

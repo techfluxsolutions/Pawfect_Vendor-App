@@ -14,8 +14,6 @@
 //   }
 // }
 
-import 'package:pawfect_vendor_app/controllers/profile_controller.dart';
-
 import '../../libs.dart';
 
 class ProfileScreen extends StatelessWidget {

@@ -1,7 +1,6 @@
 import 'dart:developer';
 
 import '../libs.dart';
-import '../services/profile_service.dart';
 
 class ProfileController extends GetxController {
   final ProfileService _profileService = ProfileService();
@@ -320,19 +319,19 @@ class ProfileController extends GetxController {
   // ========== Earnings & Payments Navigation ==========
 
   void navigateToEarnings() {
-    // Get.to(() => EarningsScreen());
+    Get.toNamed(AppRoutes.earningsScreen);
   }
 
   void navigateToBankAccount() {
-    // Get.toNamed(AppRoutes.bankDetails);
+    Get.toNamed(AppRoutes.bankDetails);
   }
 
   void navigateToPaymentMethods() {
-    // Get.toNamed(AppRoutes.paymentMethods);
+    Get.toNamed(AppRoutes.paymentMethods);
   }
 
   void navigateToTransactionHistory() {
-    // Get.toNamed(AppRoutes.transactionHistory);
+    Get.toNamed(AppRoutes.transactionHistory);
   }
 
   void navigateToTaxInfo() {
@@ -470,26 +469,46 @@ class ProfileController extends GetxController {
                 barrierDismissible: false,
               );
 
-              // Simulate logout process
-              await Future.delayed(Duration(seconds: 1));
+              try {
+                // Clear user data and tokens from storage
+                await StorageService.instance.clearAuthData();
 
-              // Close loading
-              Get.back();
+                // Clear onboarding status
+                await StorageService.instance.clearOnboardingStatus();
 
-              // TODO: Clear user data, tokens, etc.
-              // TODO: Navigate to login screen
+                log('✅ User data cleared successfully');
 
-              Get.snackbar(
-                'Logged Out',
-                'You have been logged out successfully',
-                snackPosition: SnackPosition.BOTTOM,
-                backgroundColor: Colors.green,
-                colorText: Colors.white,
-                duration: Duration(seconds: 2),
-              );
+                // Close loading dialog
+                Get.back();
 
-              // Navigate to login (uncomment when you have login route)
-              // Get.offAllNamed(AppRoutes.login);
+                // Show success message
+                Get.snackbar(
+                  'Logged Out',
+                  'You have been logged out successfully',
+                  snackPosition: SnackPosition.BOTTOM,
+                  backgroundColor: Colors.green,
+                  colorText: Colors.white,
+                  duration: Duration(seconds: 2),
+                );
+
+                // Navigate to login screen and clear all previous routes
+                Get.offAllNamed(AppRoutes.login);
+              } catch (e) {
+                // Close loading dialog
+                Get.back();
+
+                log('❌ Error during logout: $e');
+
+                // Show error message
+                Get.snackbar(
+                  'Error',
+                  'Failed to logout. Please try again.',
+                  snackPosition: SnackPosition.BOTTOM,
+                  backgroundColor: Colors.red,
+                  colorText: Colors.white,
+                  duration: Duration(seconds: 3),
+                );
+              }
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: Text('Logout', style: TextStyle(color: Colors.white)),

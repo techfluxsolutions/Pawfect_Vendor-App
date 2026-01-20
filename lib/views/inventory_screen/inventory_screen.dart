@@ -1,5 +1,4 @@
 import '../../libs.dart';
-import '../../controllers/inventory_controller.dart';
 
 class InventoryScreen extends StatelessWidget {
   InventoryScreen({super.key});

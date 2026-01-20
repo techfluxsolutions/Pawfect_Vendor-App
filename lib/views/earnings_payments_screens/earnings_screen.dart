@@ -1,10 +1,9 @@
 import '../../libs.dart';
-import '../../controllers/earnings_controller.dart';
 
 class EarningsScreen extends StatelessWidget {
   EarningsScreen({super.key});
 
-  final EarningsController controller = Get.find<EarningsController>();
+  EarningsController get controller => Get.find<EarningsController>();
 
   @override
   Widget build(BuildContext context) {

@@ -130,4 +130,37 @@ class AuthController extends GetxController {
     _timer?.cancel();
     super.onClose();
   }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // LOGOUT FUNCTIONALITY
+  // ══════════════════════════════════════════════════════════════════════════
+
+  Future<void> logout() async {
+    try {
+      isLoading.value = true;
+
+      // Clear user data and tokens from storage
+      await StorageService.instance.clearAuthData();
+
+      // Clear onboarding status
+      await StorageService.instance.clearOnboardingStatus();
+
+      // Reset controller state
+      mobileNumber.value = '';
+      otp.value = '';
+      canResend.value = false;
+      resendTimer.value = 30;
+      _timer?.cancel();
+
+      print('✅ User logged out successfully');
+
+      // Navigate to login screen and clear all previous routes
+      Get.offAllNamed(AppRoutes.login);
+    } catch (e) {
+      print('❌ Error during logout: $e');
+      throw e;
+    } finally {
+      isLoading.value = false;
+    }
+  }
 }

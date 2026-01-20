@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:dio/dio.dart';
 import 'dart:io';
 import '../core/network/api_client.dart';

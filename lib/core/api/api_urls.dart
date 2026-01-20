@@ -64,4 +64,9 @@ class ApiUrls {
 
   // Dynamic endpoints (use with string interpolation)
   static String resolveAlert(String id) => "/alerts/$id/resolve";
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // INVENTORY ENDPOINTS
+  // ══════════════════════════════════════════════════════════════════════════
+  static const String inventoryStats = "/inventory-stats";
 }

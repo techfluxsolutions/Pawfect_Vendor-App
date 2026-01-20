@@ -1,7 +1,9 @@
 import 'dart:developer';
 import '../libs.dart';
+import '../services/inventory_service.dart';
 
 class InventoryController extends GetxController {
+  final InventoryService _inventoryService = InventoryService();
   // Loading States
   var isLoading = false.obs;
   var isRefreshing = false.obs;
@@ -34,12 +36,12 @@ class InventoryController extends GetxController {
   // Filter Options
   final List<Map<String, String>> categoryOptions = [
     {'value': 'all', 'label': 'All Categories'},
-    {'value': 'dog_food', 'label': 'Dog Food'},
-    {'value': 'cat_food', 'label': 'Cat Food'},
-    {'value': 'toys', 'label': 'Toys'},
-    {'value': 'accessories', 'label': 'Accessories'},
-    {'value': 'healthcare', 'label': 'Healthcare'},
-    {'value': 'treats', 'label': 'Treats'},
+    {'value': 'Dog', 'label': 'Dog'},
+    {'value': 'Cat', 'label': 'Cat'},
+    {'value': 'Fish', 'label': 'Fish'},
+    {'value': 'Bird', 'label': 'Bird'},
+    {'value': 'Accessories', 'label': 'Accessories'},
+    {'value': 'Healthcare', 'label': 'Healthcare'},
   ];
 
   final List<Map<String, String>> stockStatusOptions = [
@@ -75,150 +77,53 @@ class InventoryController extends GetxController {
     }
 
     try {
-      // TODO: Replace with actual API call
-      await Future.delayed(Duration(milliseconds: 800));
+      log('📦 Loading inventory stats from API...');
 
-      final newItems = _generateDummyInventory();
+      final response = await _inventoryService.getInventoryStats();
 
-      if (isRefresh) {
-        inventoryItems.value = newItems;
+      if (response.success && response.data != null) {
+        final data = response.data;
+
+        // Update summary stats from API
+        totalProducts.value = data['totalProducts'] ?? 0;
+        inStockProducts.value = data['inStock'] ?? 0;
+        lowStockProducts.value = data['lowStock'] ?? 0;
+        outOfStockProducts.value = data['outOfStock'] ?? 0;
+        totalStockValue.value = (data['totalStockValue'] ?? 0.0).toDouble();
+
+        // Parse products from API
+        final List<dynamic> productsJson = data['products'] ?? [];
+        final List<InventoryItem> newItems =
+            productsJson.map((json) => InventoryItem.fromJson(json)).toList();
+
+        if (isRefresh) {
+          inventoryItems.value = newItems;
+        } else {
+          inventoryItems.addAll(newItems);
+        }
+
+        applyFilters();
+
+        log('✅ Inventory loaded successfully: ${newItems.length} items');
       } else {
-        inventoryItems.addAll(newItems);
+        log('❌ API failed: ${response.message}');
+        throw Exception(response.message ?? 'Failed to load inventory');
       }
-
-      _calculateSummary();
-      applyFilters();
-
-      log('✅ Inventory loaded successfully');
     } catch (e) {
       log('❌ Error loading inventory: $e');
+
       Get.snackbar(
         'Error',
-        'Failed to load inventory',
+        'Failed to load inventory. Please try again.',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
+        duration: Duration(seconds: 3),
       );
     } finally {
       isLoading.value = false;
       isRefreshing.value = false;
     }
-  }
-
-  List<InventoryItem> _generateDummyInventory() {
-    return [
-      InventoryItem(
-        id: 'inv_001',
-        productId: 'prod_001',
-        name: 'Premium Dog Food 5kg',
-        category: 'Dog Food',
-        sku: 'PDF-5KG-001',
-        currentStock: 25,
-        minStockLevel: 10,
-        maxStockLevel: 100,
-        price: 1299.0,
-        costPrice: 950.0,
-        lastUpdated: DateTime.now().subtract(Duration(hours: 2)),
-        supplier: 'Pet Nutrition Co.',
-        location: 'Warehouse A - Shelf 12',
-        imageUrl: '',
-      ),
-      InventoryItem(
-        id: 'inv_002',
-        productId: 'prod_002',
-        name: 'Cat Food Premium 2kg',
-        category: 'Cat Food',
-        sku: 'CFP-2KG-002',
-        currentStock: 8,
-        minStockLevel: 15,
-        maxStockLevel: 80,
-        price: 899.0,
-        costPrice: 650.0,
-        lastUpdated: DateTime.now().subtract(Duration(hours: 5)),
-        supplier: 'Feline Foods Ltd.',
-        location: 'Warehouse A - Shelf 8',
-        imageUrl: '',
-      ),
-      InventoryItem(
-        id: 'inv_003',
-        productId: 'prod_003',
-        name: 'Interactive Dog Toy',
-        category: 'Toys',
-        sku: 'IDT-TOY-003',
-        currentStock: 0,
-        minStockLevel: 5,
-        maxStockLevel: 50,
-        price: 549.0,
-        costPrice: 350.0,
-        lastUpdated: DateTime.now().subtract(Duration(days: 1)),
-        supplier: 'Toy Masters Inc.',
-        location: 'Warehouse B - Shelf 3',
-        imageUrl: '',
-      ),
-      InventoryItem(
-        id: 'inv_004',
-        productId: 'prod_004',
-        name: 'Dog Leash Premium',
-        category: 'Accessories',
-        sku: 'DLP-ACC-004',
-        currentStock: 45,
-        minStockLevel: 20,
-        maxStockLevel: 100,
-        price: 799.0,
-        costPrice: 500.0,
-        lastUpdated: DateTime.now().subtract(Duration(hours: 8)),
-        supplier: 'Pet Accessories Pro',
-        location: 'Warehouse A - Shelf 15',
-        imageUrl: '',
-      ),
-      InventoryItem(
-        id: 'inv_005',
-        productId: 'prod_005',
-        name: 'Cat Treats Variety Pack',
-        category: 'Treats',
-        sku: 'CTV-TRT-005',
-        currentStock: 12,
-        minStockLevel: 25,
-        maxStockLevel: 75,
-        price: 349.0,
-        costPrice: 200.0,
-        lastUpdated: DateTime.now().subtract(Duration(hours: 12)),
-        supplier: 'Treat Factory',
-        location: 'Warehouse B - Shelf 7',
-        imageUrl: '',
-      ),
-      InventoryItem(
-        id: 'inv_006',
-        productId: 'prod_006',
-        name: 'Pet Vitamins & Supplements',
-        category: 'Healthcare',
-        sku: 'PVS-HLT-006',
-        currentStock: 18,
-        minStockLevel: 10,
-        maxStockLevel: 60,
-        price: 1199.0,
-        costPrice: 800.0,
-        lastUpdated: DateTime.now().subtract(Duration(days: 2)),
-        supplier: 'Health Pet Solutions',
-        location: 'Warehouse A - Shelf 5',
-        imageUrl: '',
-      ),
-    ];
-  }
-
-  void _calculateSummary() {
-    totalProducts.value = inventoryItems.length;
-    inStockProducts.value =
-        inventoryItems.where((item) => item.isInStock).length;
-    lowStockProducts.value =
-        inventoryItems.where((item) => item.isLowStock).length;
-    outOfStockProducts.value =
-        inventoryItems.where((item) => item.isOutOfStock).length;
-
-    totalStockValue.value = inventoryItems.fold(
-      0.0,
-      (sum, item) => sum + (item.currentStock * item.costPrice),
-    );
   }
 
   // ========== Load More ==========
@@ -230,17 +135,13 @@ class InventoryController extends GetxController {
     currentPage.value++;
 
     try {
-      // TODO: Replace with actual API call
-      await Future.delayed(Duration(milliseconds: 500));
+      // For now, disable pagination since API returns all data
+      // TODO: Implement pagination when API supports it
+      hasMoreData.value = false;
 
-      // Simulate no more data after page 3
-      if (currentPage.value > 3) {
-        hasMoreData.value = false;
-      } else {
-        final newItems = _generateDummyInventory();
-        inventoryItems.addAll(newItems);
-        applyFilters();
-      }
+      log(
+        '📄 Pagination not implemented yet - showing all data from initial load',
+      );
     } catch (e) {
       log('❌ Error loading more inventory: $e');
     } finally {
@@ -293,12 +194,10 @@ class InventoryController extends GetxController {
 
     // Category filter
     if (selectedCategory.value != 'all') {
-      final categoryLabel =
-          categoryOptions.firstWhere(
-            (cat) => cat['value'] == selectedCategory.value,
-            orElse: () => {'label': ''},
-          )['label']!;
-      result = result.where((item) => item.category == categoryLabel).toList();
+      result =
+          result
+              .where((item) => item.category == selectedCategory.value)
+              .toList();
     }
 
     // Stock status filter
@@ -364,19 +263,29 @@ class InventoryController extends GetxController {
       // TODO: Replace with actual API call
       await Future.delayed(Duration(milliseconds: 800));
 
+      // Determine new stock status based on quantity
+      String newStockStatus;
+      if (newStock == 0) {
+        newStockStatus = 'Out of Stock';
+      } else if (newStock <= item.minStockLevel) {
+        newStockStatus = 'Low Stock';
+      } else {
+        newStockStatus = 'In Stock';
+      }
+
       // Update local data
       final index = inventoryItems.indexWhere((i) => i.id == item.id);
       if (index != -1) {
         inventoryItems[index] = item.copyWith(
           currentStock: newStock,
           lastUpdated: DateTime.now(),
+          stockStatus: newStockStatus,
         );
 
         // Add stock movement record
         _addStockMovement(item, newStock - item.currentStock, reason);
 
         applyFilters();
-        _calculateSummary();
       }
 
       Get.snackbar(
@@ -456,12 +365,12 @@ class InventoryController extends GetxController {
             inventoryItems[index] = item.copyWith(
               currentStock: item.maxStockLevel,
               lastUpdated: DateTime.now(),
+              stockStatus: 'In Stock',
             );
           }
         }
 
         applyFilters();
-        _calculateSummary();
 
         Get.snackbar(
           'Bulk Restock Complete',
@@ -596,6 +505,7 @@ class InventoryItem {
   final String supplier;
   final String location;
   final String imageUrl;
+  final String stockStatus;
 
   InventoryItem({
     required this.id,
@@ -612,27 +522,29 @@ class InventoryItem {
     required this.supplier,
     required this.location,
     required this.imageUrl,
+    required this.stockStatus,
   });
 
   factory InventoryItem.fromJson(Map<String, dynamic> json) {
     return InventoryItem(
-      id: json['id']?.toString() ?? '',
-      productId: json['productId']?.toString() ?? '',
+      id: json['_id']?.toString() ?? '',
+      productId: json['_id']?.toString() ?? '', // Using _id as productId
       name: json['name'] ?? '',
       category: json['category'] ?? '',
-      sku: json['sku'] ?? '',
-      currentStock: json['currentStock'] ?? 0,
-      minStockLevel: json['minStockLevel'] ?? 0,
-      maxStockLevel: json['maxStockLevel'] ?? 0,
+      sku: json['_id']?.toString() ?? '', // Using _id as SKU since not provided
+      currentStock: json['stockQuantity'] ?? 0,
+      minStockLevel: 5, // Default min stock level
+      maxStockLevel: 100, // Default max stock level
       price: (json['price'] ?? 0.0).toDouble(),
-      costPrice: (json['costPrice'] ?? 0.0).toDouble(),
+      costPrice: (json['price'] ?? 0.0).toDouble() * 0.7, // Assuming 30% margin
       lastUpdated:
-          json['lastUpdated'] != null
-              ? DateTime.parse(json['lastUpdated'])
+          json['updatedAt'] != null
+              ? DateTime.parse(json['updatedAt'])
               : DateTime.now(),
-      supplier: json['supplier'] ?? '',
-      location: json['location'] ?? '',
-      imageUrl: json['imageUrl'] ?? '',
+      supplier: 'Default Supplier', // Not provided in API
+      location: 'Warehouse A', // Not provided in API
+      imageUrl: json['image'] ?? '',
+      stockStatus: json['stockStatus'] ?? 'In Stock',
     );
   }
 
@@ -652,6 +564,7 @@ class InventoryItem {
       'supplier': supplier,
       'location': location,
       'imageUrl': imageUrl,
+      'stockStatus': stockStatus,
     };
   }
 
@@ -670,6 +583,7 @@ class InventoryItem {
     String? supplier,
     String? location,
     String? imageUrl,
+    String? stockStatus,
   }) {
     return InventoryItem(
       id: id ?? this.id,
@@ -686,22 +600,28 @@ class InventoryItem {
       supplier: supplier ?? this.supplier,
       location: location ?? this.location,
       imageUrl: imageUrl ?? this.imageUrl,
+      stockStatus: stockStatus ?? this.stockStatus,
     );
   }
 
   // Status getters
-  bool get isInStock => currentStock > minStockLevel;
-  bool get isLowStock => currentStock > 0 && currentStock <= minStockLevel;
-  bool get isOutOfStock => currentStock == 0;
+  bool get isInStock => stockStatus.toLowerCase() == 'in stock';
+  bool get isLowStock => stockStatus.toLowerCase() == 'low stock';
+  bool get isOutOfStock => stockStatus.toLowerCase() == 'out of stock';
 
-  StockStatus get stockStatus {
-    if (isOutOfStock) return StockStatus.outOfStock;
-    if (isLowStock) return StockStatus.lowStock;
-    return StockStatus.inStock;
+  StockStatus get stockStatusEnum {
+    switch (stockStatus.toLowerCase()) {
+      case 'out of stock':
+        return StockStatus.outOfStock;
+      case 'low stock':
+        return StockStatus.lowStock;
+      default:
+        return StockStatus.inStock;
+    }
   }
 
   Color get stockStatusColor {
-    switch (stockStatus) {
+    switch (stockStatusEnum) {
       case StockStatus.inStock:
         return Colors.green;
       case StockStatus.lowStock:
@@ -711,16 +631,7 @@ class InventoryItem {
     }
   }
 
-  String get stockStatusText {
-    switch (stockStatus) {
-      case StockStatus.inStock:
-        return 'In Stock';
-      case StockStatus.lowStock:
-        return 'Low Stock';
-      case StockStatus.outOfStock:
-        return 'Out of Stock';
-    }
-  }
+  String get stockStatusText => stockStatus;
 
   String get formattedPrice => '₹${price.toStringAsFixed(0)}';
   String get formattedCostPrice => '₹${costPrice.toStringAsFixed(0)}';
